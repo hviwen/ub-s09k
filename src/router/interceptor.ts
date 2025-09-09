@@ -14,7 +14,7 @@ import { isPageTabbar, tabbarStore } from '@/tabbar/store'
 import { getAllPages, getLastPage, HOME_PAGE, parseUrlToObj } from '@/utils/index'
 import { EXCLUDE_LOGIN_PATH_LIST, isNeedLoginMode, LOGIN_PAGE, LOGIN_PAGE_ENABLE_IN_MP } from './config'
 
-export const FG_LOG_ENABLE = false
+export const LOG_ENABLE = false
 
 export function judgeIsExcludePath(path: string) {
   const isDev = import.meta.env.DEV
@@ -105,11 +105,11 @@ export const navigateToInterceptor = {
 async function handleRouteNavigation(url: string, query?: Record<string, string>): Promise<boolean> {
   let { path, query: _query } = parseUrlToObj(url)
 
-  FG_LOG_ENABLE && console.log('\n\n路由拦截器:-------------------------------------')
-  FG_LOG_ENABLE && console.log('路由拦截器 1: url->', url, ', query ->', query)
+  LOG_ENABLE && console.log('\n\n路由拦截器:-------------------------------------')
+  LOG_ENABLE && console.log('路由拦截器 1: url->', url, ', query ->', query)
   const myQuery = { ..._query, ...query }
-  FG_LOG_ENABLE && console.log('路由拦截器 2: path->', path, ', _query ->', _query)
-  FG_LOG_ENABLE && console.log('路由拦截器 3: myQuery ->', myQuery)
+  LOG_ENABLE && console.log('路由拦截器 2: path->', path, ', _query ->', _query)
+  LOG_ENABLE && console.log('路由拦截器 3: myQuery ->', myQuery)
 
   // 处理相对路径
   path = normalizeRoutePath(path)
@@ -192,7 +192,7 @@ function handlePermissionDenied(
  */
 async function checkLoginPermission(path: string, myQuery: Record<string, string>): Promise<boolean> {
   const tokenStore = useTokenStore()
-  FG_LOG_ENABLE && console.log('tokenStore.hasLogin:', tokenStore.hasLogin)
+  LOG_ENABLE && console.log('tokenStore.hasLogin:', tokenStore.hasLogin)
 
   // 已登录用户的处理
   if (tokenStore.hasLogin) {
@@ -251,7 +251,7 @@ function handleNotLoggedInUser(path: string, myQuery: Record<string, string>): b
       return true
     }
 
-    FG_LOG_ENABLE && console.log('1 isNeedLogin(白名单策略) redirectUrl:', redirectUrl)
+    LOG_ENABLE && console.log('1 isNeedLogin(白名单策略) redirectUrl:', redirectUrl)
     uni.navigateTo({ url: redirectUrl })
     return false
   }
@@ -260,7 +260,7 @@ function handleNotLoggedInUser(path: string, myQuery: Record<string, string>): b
   // #region 2/2 默认不需要登录的情况(黑名单策略) ---------------------------
   // 不需要登录里面的 EXCLUDE_LOGIN_PATH_LIST 表示黑名单，需要重定向到登录页
   if (judgeIsExcludePath(path)) {
-    FG_LOG_ENABLE && console.log('2 isNeedLogin(黑名单策略) redirectUrl:', redirectUrl)
+    LOG_ENABLE && console.log('2 isNeedLogin(黑名单策略) redirectUrl:', redirectUrl)
     uni.navigateTo({ url: redirectUrl })
     return false
   }

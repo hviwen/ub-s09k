@@ -1,10 +1,10 @@
 import type { CustomTabBarItem, CustomTabBarItemBadge } from './config'
 import { reactive } from 'vue'
 
-import { FG_LOG_ENABLE } from '@/router/interceptor'
 import { tabbarList as _tabbarList, customTabbarEnable } from './config'
+import { LOG_ENABLE } from '@/router/interceptor'
 
-// TODO 1/2: 中间的鼓包tabbarItem的开关
+// 中间鼓包 tabbarItem 的开关（默认关闭）
 const BULGE_ENABLE = false
 
 /** tabbarList 里面的 path 从 pages.config.ts 得到 */
@@ -46,7 +46,7 @@ const tabbarStore = reactive({
   },
   setAutoCurIdx(path: string) {
     const index = tabbarList.findIndex(item => item.pagePath === path)
-    FG_LOG_ENABLE && console.log('index:', index, path)
+    LOG_ENABLE && console.log('index:', index, path)
     // console.log('tabbarList:', tabbarList)
     if (index === -1) {
       const pagesPathList = getCurrentPages().map(item => item.route.startsWith('/') ? item.route : `/${item.route}`)

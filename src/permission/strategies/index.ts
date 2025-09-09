@@ -6,7 +6,7 @@
  */
 
 import type { IPermissionChecker } from '../interfaces'
-import type {
+import {
   AccessControlAction,
   Permission,
   PermissionAction,

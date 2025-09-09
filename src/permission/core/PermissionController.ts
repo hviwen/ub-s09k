@@ -6,7 +6,7 @@
  */
 
 import type { IContentAccessController, IPermissionChecker } from '../interfaces'
-import type {
+import {
   AccessControlAction,
   ContentAccessConfig,
   Permission,

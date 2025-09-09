@@ -19,6 +19,7 @@ export default uniHelper({
   ],
   // https://eslint-config.antfu.me/rules
   rules: {
+  // ==================== 基础规则 ====================
     'no-useless-return': 'off',
     'no-console': 'off',
     'no-unused-vars': 'off',
@@ -29,6 +30,51 @@ export default uniHelper({
     'jsdoc/require-returns-description': 'off',
     'ts/no-empty-object-type': 'off',
     'no-extend-native': 'off',
+
+  // ==================== TypeScript 宽松规则配置 ====================
+    // 允许使用 any 类型，降低类型学习门槛
+    '@typescript-eslint/no-explicit-any': 'off',
+    'ts/no-explicit-any': 'off',
+
+    // 允许使用 @ts-ignore 注释，方便快速解决类型问题
+    '@typescript-eslint/ban-ts-comment': 'off',
+    'ts/ban-ts-comment': 'off',
+
+    // 允许非空断言操作符 (!)，简化类型处理
+    '@typescript-eslint/no-non-null-assertion': 'off',
+    'ts/no-non-null-assertion': 'off',
+
+    // 未使用变量设为警告而非错误，不阻塞开发
+    '@typescript-eslint/no-unused-vars': 'warn',
+    'ts/no-unused-vars': 'warn',
+
+    // 允许空函数，便于快速原型开发
+    '@typescript-eslint/no-empty-function': 'off',
+    'ts/no-empty-function': 'off',
+
+    // 允许使用 require() 语句
+    '@typescript-eslint/no-var-requires': 'off',
+    'ts/no-var-requires': 'off',
+
+    // 允许不明确的函数返回类型
+    '@typescript-eslint/explicit-function-return-type': 'off',
+    'ts/explicit-function-return-type': 'off',
+
+    // 允许不明确的模块边界类型
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    'ts/explicit-module-boundary-types': 'off',
+
+    // 允许使用 Function 类型
+    '@typescript-eslint/ban-types': 'off',
+    'ts/ban-types': 'off',
+
+    // 允许空接口定义
+    '@typescript-eslint/no-empty-interface': 'off',
+    'ts/no-empty-interface': 'off',
+
+    // 允许使用 object 类型
+    '@typescript-eslint/no-object-literal-type-assertion': 'off',
+    'ts/no-object-literal-type-assertion': 'off',
     'vue/singleline-html-element-content-newline': [
       'error',
       {
@@ -53,3 +99,4 @@ export default uniHelper({
     html: true,
   },
 })
+ 

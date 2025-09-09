@@ -1,0 +1,262 @@
+{
+  "Vue Page Template": {
+    "prefix": "vue-page",
+    "body": [
+      "<script setup>",
+      "definePage({",
+      "  style: {",
+      "    navigationBarTitleText: '${1:页面标题}'",
+      "  }",
+      "})",
+      "",
+      "const ${2:data} = ref(${3:null})",
+      "",
+      "onLoad((options) => {",
+      "  console.log('页面加载:', options)",
+      "})",
+      "</script>",
+      "",
+      "<template>",
+      "  <view class=\"page\">",
+      "    ${4:<!-- 页面内容 -->}",
+      "  </view>",
+      "</template>",
+      "",
+      "<style lang=\"scss\" scoped>",
+      ".page {",
+      "  padding: 20px;",
+      "}",
+      "</style>"
+    ],
+    "description": "创建一个基础的 Vue 页面模板"
+  },
+
+  "Vue Component Template": {
+    "prefix": "vue-component",
+    "body": [
+      "<script setup>",
+      "// Props 定义",
+      "const props = defineProps({",
+      "  ${1:title}: String,",
+      "  ${2:visible}: Boolean",
+      "})",
+      "",
+      "// Emits 定义", 
+      "const emit = defineEmits(['${3:update}', '${4:close}'])",
+      "",
+      "// 响应式数据",
+      "const ${5:data} = ref(${6:null})",
+      "",
+      "// 方法",
+      "function ${7:handleClick}() {",
+      "  emit('${3:update}', ${5:data}.value)",
+      "}",
+      "</script>",
+      "",
+      "<template>",
+      "  <view class=\"component\">",
+      "    ${8:<!-- 组件内容 -->}",
+      "  </view>",
+      "</template>",
+      "",
+      "<style lang=\"scss\" scoped>",
+      ".component {",
+      "  // 组件样式",
+      "}",
+      "</style>"
+    ],
+    "description": "创建一个基础的 Vue 组件模板"
+  },
+
+  "API Function": {
+    "prefix": "api-function",
+    "body": [
+      "/**",
+      " * ${1:API 函数描述}",
+      " * @param {${2:Object}} ${3:params} - 请求参数",
+      " * @returns {Promise<${4:Object}>} 响应数据",
+      " */",
+      "export function ${5:functionName}(${3:params}) {",
+      "  return http.${6|get,post,put,delete|}('${7:/api/path}', ${3:params})",
+      "}"
+    ],
+    "description": "创建一个 API 请求函数"
+  },
+
+  "Pinia Store": {
+    "prefix": "pinia-store",
+    "body": [
+      "import { defineStore } from 'pinia'",
+      "import { ref, computed } from 'vue'",
+      "",
+      "export const use${1:Name}Store = defineStore('${2:name}', () => {",
+      "  // 状态",
+      "  const ${3:data} = ref(${4:null})",
+      "  ",
+      "  // 计算属性",
+      "  const ${5:computed}Value = computed(() => {",
+      "    return ${3:data}.value ? ${3:data}.value.length : 0",
+      "  })",
+      "  ",
+      "  // 方法",
+      "  function ${6:update}${1:Name}(newData) {",
+      "    ${3:data}.value = newData",
+      "  }",
+      "  ",
+      "  function ${7:clear}${1:Name}() {",
+      "    ${3:data}.value = ${4:null}",
+      "  }",
+      "  ",
+      "  return {",
+      "    ${3:data},",
+      "    ${5:computed}Value,",
+      "    ${6:update}${1:Name},",
+      "    ${7:clear}${1:Name}",
+      "  }",
+      "}, {",
+      "  persist: ${8|true,false|}",
+      "})"
+    ],
+    "description": "创建一个 Pinia Store"
+  },
+
+  "Utility Function": {
+    "prefix": "util-function",
+    "body": [
+      "/**",
+      " * ${1:函数描述}",
+      " * @param {${2:string}} ${3:param} - 参数描述",
+      " * @returns {${4:string}} 返回值描述",
+      " */",
+      "export function ${5:functionName}(${3:param}) {",
+      "  ${6:// 函数实现}",
+      "  return ${7:result}",
+      "}"
+    ],
+    "description": "创建一个工具函数"
+  },
+
+  "Request Hook": {
+    "prefix": "use-request",
+    "body": [
+      "const { loading, error, data, run } = useRequest(",
+      "  () => ${1:apiFunction}(${2:params}),",
+      "  {",
+      "    immediate: ${3|true,false|},",
+      "    initialData: ${4:null}",
+      "  }",
+      ")"
+    ],
+    "description": "使用 useRequest Hook"
+  },
+
+  "Permission Check": {
+    "prefix": "permission-check",
+    "body": [
+      "const permissionStore = usePermissionStore()",
+      "",
+      "const hasPermission = await permissionStore.hasPermission(",
+      "  '${1:action}',",
+      "  '${2:resourceType}',", 
+      "  '${3:resourceId}'",
+      ")",
+      "",
+      "if (!hasPermission) {",
+      "  uni.showToast({",
+      "    title: '${4:没有权限}',",
+      "    icon: 'none'",
+      "  })",
+      "  return",
+      "}"
+    ],
+    "description": "权限检查代码块"
+  },
+
+  "Role Switch": {
+    "prefix": "role-switch",
+    "body": [
+      "const permissionStore = usePermissionStore()",
+      "",
+      "async function switchTo${1:Role}() {",
+      "  try {",
+      "    const success = await permissionStore.switchRole({",
+      "      targetRole: UserRole.${2:ROLE_NAME},",
+      "      reason: '${3:切换原因}'",
+      "    })",
+      "    ",
+      "    if (success) {",
+      "      uni.showToast({",
+      "        title: '角色切换成功',",
+      "        icon: 'success'",
+      "      })",
+      "    }",
+      "  } catch (error) {",
+      "    uni.showToast({",
+      "      title: '角色切换失败',",
+      "      icon: 'error'",
+      "    })",
+      "  }",
+      "}"
+    ],
+    "description": "角色切换功能"
+  },
+
+  "Error Handler": {
+    "prefix": "error-handler",
+    "body": [
+      "try {",
+      "  ${1:// 可能出错的代码}",
+      "} catch (error) {",
+      "  console.error('${2:操作失败}:', error)",
+      "  ",
+      "  uni.showToast({",
+      "    title: error.message || '${3:操作失败，请重试}',",
+      "    icon: 'none'",
+      "  })",
+      "}"
+    ],
+    "description": "错误处理代码块"
+  },
+
+  "Loading State": {
+    "prefix": "loading-state",
+    "body": [
+      "const loading = ref(false)",
+      "",
+      "async function ${1:handleAction}() {",
+      "  loading.value = true",
+      "  ",
+      "  try {",
+      "    ${2:// 异步操作}",
+      "  } catch (error) {",
+      "    console.error('操作失败:', error)",
+      "  } finally {",
+      "    loading.value = false",
+      "  }",
+      "}"
+    ],
+    "description": "加载状态管理"
+  },
+
+  "Form Validation": {
+    "prefix": "form-validate",
+    "body": [
+      "const formData = ref({",
+      "  ${1:field}: '${2:}'",
+      "})",
+      "",
+      "const errors = ref({})",
+      "",
+      "function validate${3:Form}() {",
+      "  errors.value = {}",
+      "  ",
+      "  if (!formData.value.${1:field}) {",
+      "    errors.value.${1:field} = '${4:请输入${1:field}}'",
+      "  }",
+      "  ",
+      "  return Object.keys(errors.value).length === 0",
+      "}"
+    ],
+    "description": "表单验证逻辑"
+  }
+}

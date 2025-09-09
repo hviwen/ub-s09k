@@ -23,7 +23,6 @@ onHide(() => {
 </script>
 
 <style lang="scss">
-swiper,
 scroll-view {
   flex: 1;
   height: 100%;

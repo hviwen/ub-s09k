@@ -2,6 +2,7 @@
   "compilerOptions": {
     "composite": true,
     "lib": ["esnext", "dom"],
+    "target": "es2015",
     "baseUrl": ".",
     "module": "ESNext",
     "moduleResolution": "Node",
@@ -19,12 +20,48 @@
       "z-paging/types",
       "./src/typings.d.ts"
     ],
+
+    // ==================== 开发者友好配置 ====================
+    // 允许 JavaScript 和 TypeScript 混合开发
     "allowJs": true,
-    "noImplicitThis": true,
+
+    // 关闭严格模式，降低类型检查严格程度
+    "strict": false,
+
+    // 允许隐式 any 类型，不强制类型注解
+    "noImplicitAny": false,
+
+    // 允许隐式 this 类型
+    "noImplicitThis": false,
+
+    // 不强制所有代码路径都有返回值
+    "noImplicitReturns": false,
+
+    // 允许未使用的局部变量
+    "noUnusedLocals": false,
+
+    // 允许未使用的参数
+    "noUnusedParameters": false,
+
+    // 允许不可达代码
+    "allowUnreachableCode": true,
+
+    // 允许未使用的标签
+    "allowUnusedLabels": true,
+
+    // 跳过库文件类型检查，提升编译速度
+    "skipLibCheck": true,
+
+    // 允许从没有默认导出的模块中默认导入
+    "allowSyntheticDefaultImports": true,
+
+    // 输出配置
     "outDir": "dist",
     "sourceMap": true,
-    "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true
+
+    // 模块解析配置
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": false
   },
   "vueCompilerOptions": {
     "plugins": ["@uni-helper/uni-types/volar-plugin"]

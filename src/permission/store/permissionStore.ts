@@ -6,7 +6,7 @@
  */
 
 import type { IRoleSwitchListener, RoleSwitchEvent } from '../core/RoleSwitchService'
-import type {
+import {
   AccessControlAction,
   Permission,
   PermissionCheckResult,
