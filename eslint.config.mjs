@@ -19,7 +19,7 @@ export default uniHelper({
   ],
   // https://eslint-config.antfu.me/rules
   rules: {
-  // ==================== 基础规则 ====================
+    // ==================== 基础规则 ====================
     'no-useless-return': 'off',
     'no-console': 'off',
     'no-unused-vars': 'off',
@@ -31,7 +31,7 @@ export default uniHelper({
     'ts/no-empty-object-type': 'off',
     'no-extend-native': 'off',
 
-  // ==================== TypeScript 宽松规则配置 ====================
+    // ==================== TypeScript 宽松规则配置 ====================
     // 允许使用 any 类型，降低类型学习门槛
     '@typescript-eslint/no-explicit-any': 'off',
     'ts/no-explicit-any': 'off',
@@ -82,9 +82,15 @@ export default uniHelper({
       },
     ],
     // vue SFC 调换顺序改这里
-    'vue/block-order': ['error', {
-      order: [['script', 'template'], 'style'],
-    }],
+    'vue/block-order': [
+      'error',
+      {
+        order: [['script', 'template'], 'style'],
+      },
+    ],
+
+    // 强制大括号样式为 1tbs：使 else/catch 与前一行的闭合大括号同一行
+    'brace-style': ['error', '1tbs', { allowSingleLine: true }],
   },
   formatters: {
     /**
@@ -99,4 +105,3 @@ export default uniHelper({
     html: true,
   },
 })
- 

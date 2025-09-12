@@ -2,7 +2,7 @@
 import { isApp, isAppAndroid, isAppHarmony, isAppIOS, isAppPlus, isH5, isMpWeixin, isWeb } from '@uni-helper/uni-env'
 import { LOGIN_PAGE } from '@/router/config'
 import { useTokenStore } from '@/store'
-import { tabbarStore } from '@/tabbar/store'
+import { tabBarStore } from '@/tabbar/store'
 import RequestComp from './components/request.vue'
 import VBindCss from './components/VBindCss.vue'
 
@@ -45,9 +45,9 @@ function gotoTabbar() {
     url: '/pages/index/index',
   })
 }
-// #region setTabbarBadge
-function setTabbarBadge() {
-  tabbarStore.setTabbarItemBadge(1, 100)
+// #region setTabBarBadge
+function setTabBarBadge() {
+  tabBarStore.setTabBarItemBadge(1, 100)
 }
 // #endregion
 
@@ -113,7 +113,7 @@ onShow(() => {
         点击退出登录
       </button>
     </view>
-    <button class="mt-4 w-60 text-center" @click="setTabbarBadge">
+    <button class="mt-4 w-60 text-center" @click="setTabBarBadge">
       设置tabbarBadge
     </button>
     <RequestComp />

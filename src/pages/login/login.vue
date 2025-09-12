@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
-import { tabbarList } from '@/tabbar/config'
-import { isPageTabbar } from '@/tabbar/store'
+import { tabBarList } from '@/tabbar/config'
+import { isPageTabBar } from '@/tabbar/store'
 import { ensureDecodeURIComponent } from '@/utils'
 import { parseUrlToObj } from '@/utils/index'
 
@@ -17,9 +17,8 @@ onLoad((options) => {
   console.log('login options: ', options)
   if (options.redirect) {
     redirectUrl.value = ensureDecodeURIComponent(options.redirect)
-  }
-  else {
-    redirectUrl.value = tabbarList[0].pagePath
+  } else {
+    redirectUrl.value = tabBarList[0].pagePath
   }
   console.log('redirectUrl.value: ', redirectUrl.value)
 })
@@ -51,8 +50,7 @@ async function doLogin() {
       expiresIn: 60 * 60 * 24 * 7,
     })
     console.log(redirectUrl.value)
-  }
-  catch (error) {
+  } catch (error) {
     console.log('登录失败', error)
   }
   let path = redirectUrl.value
@@ -61,8 +59,8 @@ async function doLogin() {
   }
   const { path: _path, query } = parseUrlToObj(path)
   console.log('_path:', _path, 'query:', query, 'path:', path)
-  console.log('isPageTabbar(_path):', isPageTabbar(_path))
-  if (isPageTabbar(_path)) {
+  console.log('isPageTabBar(_path):', isPageTabBar(_path))
+  if (isPageTabBar(_path)) {
     // 经过我的测试 switchTab 不能带 query 参数, 不管是放到 url  还是放到 query ,
     // 最后跳转过去的时候都会丢失 query 信息
     uni.switchTab({
@@ -72,8 +70,7 @@ async function doLogin() {
     //   url: _path,
     //   query,
     // })
-  }
-  else {
+  } else {
     console.log('redirectTo:', path)
     uni.redirectTo({
       url: path,

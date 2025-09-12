@@ -11,18 +11,18 @@
  */
 export function formatDate(date, format = 'YYYY-MM-DD') {
   const d = new Date(date)
-  
+
   if (isNaN(d.getTime())) {
     return '无效日期'
   }
-  
+
   const year = d.getFullYear()
   const month = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
   const hours = String(d.getHours()).padStart(2, '0')
   const minutes = String(d.getMinutes()).padStart(2, '0')
   const seconds = String(d.getSeconds()).padStart(2, '0')
-  
+
   return format
     .replace('YYYY', year)
     .replace('MM', month)
@@ -41,8 +41,8 @@ export function validateEmail(email) {
   if (!email || typeof email !== 'string') {
     return false
   }
-  
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+  const emailRegex = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
   return emailRegex.test(email)
 }
 
@@ -55,7 +55,7 @@ export function validatePhone(phone) {
   if (!phone || typeof phone !== 'string') {
     return false
   }
-  
+
   const phoneRegex = /^1[3-9]\d{9}$/
   return phoneRegex.test(phone)
 }
@@ -69,15 +69,15 @@ export function deepClone(obj) {
   if (obj === null || typeof obj !== 'object') {
     return obj
   }
-  
+
   if (obj instanceof Date) {
     return new Date(obj.getTime())
   }
-  
-  if (obj instanceof Array) {
+
+  if (Array.isArray(obj)) {
     return obj.map(item => deepClone(item))
   }
-  
+
   if (typeof obj === 'object') {
     const cloned = {}
     for (const key in obj) {
@@ -87,7 +87,7 @@ export function deepClone(obj) {
     }
     return cloned
   }
-  
+
   return obj
 }
 
@@ -99,7 +99,7 @@ export function deepClone(obj) {
  */
 export function debounce(func, delay = 300) {
   let timeoutId
-  
+
   return function (...args) {
     clearTimeout(timeoutId)
     timeoutId = setTimeout(() => func.apply(this, args), delay)
@@ -114,12 +114,12 @@ export function debounce(func, delay = 300) {
  */
 export function throttle(func, limit = 300) {
   let inThrottle
-  
+
   return function (...args) {
     if (!inThrottle) {
       func.apply(this, args)
       inThrottle = true
-      setTimeout(() => inThrottle = false, limit)
+      setTimeout(() => (inThrottle = false), limit)
     }
   }
 }
@@ -146,14 +146,14 @@ export function randomString(length = 8, chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcd
  */
 export function formatFileSize(bytes, decimals = 2) {
   if (bytes === 0) return '0 Bytes'
-  
+
   const k = 1024
   const dm = decimals < 0 ? 0 : decimals
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
-  
+
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i]
+
+  return `${Number.parseFloat((bytes / k ** i).toFixed(dm))} ${sizes[i]}`
 }
 
 /**
@@ -177,9 +177,9 @@ export function setStorageWithExpire(key, value, expireMinutes = 60) {
   const expireTime = Date.now() + expireMinutes * 60 * 1000
   const data = {
     value,
-    expireTime
+    expireTime,
   }
-  
+
   try {
     uni.setStorageSync(key, JSON.stringify(data))
   } catch (error) {
@@ -196,14 +196,14 @@ export function getStorageWithExpire(key) {
   try {
     const dataStr = uni.getStorageSync(key)
     if (!dataStr) return null
-    
+
     const data = JSON.parse(dataStr)
-    
+
     if (Date.now() > data.expireTime) {
       uni.removeStorageSync(key)
       return null
     }
-    
+
     return data.value
   } catch (error) {
     console.error('读取存储失败:', error)
@@ -213,51 +213,51 @@ export function getStorageWithExpire(key) {
 
 /**
  * 简单的表单验证器
- * @param {Object} formData - 表单数据
- * @param {Object} rules - 验证规则
- * @returns {Object} 验证结果 { isValid: boolean, errors: Object }
+ * @param {object} formData - 表单数据
+ * @param {object} rules - 验证规则
+ * @returns {object} 验证结果 { isValid: boolean, errors: Object }
  */
 export function validateForm(formData, rules) {
   const errors = {}
   let isValid = true
-  
+
   for (const field in rules) {
     const rule = rules[field]
     const value = formData[field]
-    
+
     // 必填验证
     if (rule.required && (!value || value.toString().trim() === '')) {
       errors[field] = rule.message || `${field} 是必填项`
       isValid = false
       continue
     }
-    
+
     // 如果值为空且不是必填，跳过其他验证
     if (!value && !rule.required) {
       continue
     }
-    
+
     // 最小长度验证
     if (rule.minLength && value.length < rule.minLength) {
       errors[field] = `${field} 最少需要 ${rule.minLength} 个字符`
       isValid = false
       continue
     }
-    
+
     // 最大长度验证
     if (rule.maxLength && value.length > rule.maxLength) {
       errors[field] = `${field} 最多允许 ${rule.maxLength} 个字符`
       isValid = false
       continue
     }
-    
+
     // 正则验证
     if (rule.pattern && !rule.pattern.test(value)) {
       errors[field] = rule.message || `${field} 格式不正确`
       isValid = false
       continue
     }
-    
+
     // 自定义验证函数
     if (rule.validator && typeof rule.validator === 'function') {
       const result = rule.validator(value, formData)
@@ -267,7 +267,7 @@ export function validateForm(formData, rules) {
       }
     }
   }
-  
+
   return { isValid, errors }
 }
 
@@ -281,7 +281,7 @@ export function showToast(title, icon = 'none', duration = 2000) {
   uni.showToast({
     title,
     icon,
-    duration
+    duration,
   })
 }
 
@@ -292,16 +292,16 @@ export function showToast(title, icon = 'none', duration = 2000) {
  * @returns {Promise<boolean>} 用户是否确认
  */
 export function showConfirm(content, title = '提示') {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     uni.showModal({
       title,
       content,
-      success: (res) => {
+      success: res => {
         resolve(res.confirm)
       },
       fail: () => {
         resolve(false)
-      }
+      },
     })
   })
 }

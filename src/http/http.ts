@@ -19,14 +19,14 @@ export function http<T>(options: CustomRequestOptions) {
       responseType: 'json',
       // #endif
       // 响应成功
-      success: async (res) => {
+      success: async res => {
         // 状态码 2xx，参考 axios 的设计
         if (res.statusCode >= 200 && res.statusCode < 300) {
           // 2.1 提取核心数据 res.data
           return resolve(res.data as IResData<T>)
         }
         const resData: IResData<T> = res.data as IResData<T>
-        if ((res.statusCode === 401) || (resData.code === 401)) {
+        if (res.statusCode === 401 || resData.code === 401) {
           const tokenStore = useTokenStore()
           if (!isDoubleTokenMode) {
             // 未启用双token策略，清理用户信息，跳转到登录页
@@ -35,7 +35,7 @@ export function http<T>(options: CustomRequestOptions) {
             return reject(res)
           }
           /* -------- 无感刷新 token ----------- */
-          const { refreshToken } = tokenStore.tokenInfo as IDoubleTokenRes || {}
+          const { refreshToken } = (tokenStore.tokenInfo as IDoubleTokenRes) || {}
           // token 失效的，且有刷新 token 的，才放到请求队列里
           if ((res.statusCode === 401 || resData.code === 401) && refreshToken) {
             taskQueue.push(() => {
@@ -60,8 +60,7 @@ export function http<T>(options: CustomRequestOptions) {
               })
               // 将任务队列的所有任务重新请求
               taskQueue.forEach(task => task())
-            }
-            catch (refreshErr) {
+            } catch (refreshErr) {
               console.error('刷新 token 失败:', refreshErr)
               refreshing = false
               // 刷新 token 失败，跳转到登录页
@@ -79,20 +78,18 @@ export function http<T>(options: CustomRequestOptions) {
               setTimeout(() => {
                 uni.navigateTo({ url: LOGIN_PAGE })
               }, 2000)
-            }
-            finally {
+            } finally {
               // 不管刷新 token 成功与否，都清空任务队列
               taskQueue = []
             }
           }
-        }
-        else {
+        } else {
           // 其他错误 -> 根据后端错误信息轻提示
-          !options.hideErrorToast
-          && uni.showToast({
-            icon: 'none',
-            title: (res.data as IResData<T>).msg || '请求错误',
-          })
+          !options.hideErrorToast &&
+            uni.showToast({
+              icon: 'none',
+              title: (res.data as IResData<T>).msg || '请求错误',
+            })
           reject(res)
         }
       },
@@ -115,7 +112,12 @@ export function http<T>(options: CustomRequestOptions) {
  * @param header 请求头，默认为json格式
  * @returns
  */
-export function httpGet<T>(url: string, query?: Record<string, any>, header?: Record<string, any>, options?: Partial<CustomRequestOptions>) {
+export function httpGet<T>(
+  url: string,
+  query?: Record<string, any>,
+  header?: Record<string, any>,
+  options?: Partial<CustomRequestOptions>
+) {
   return http<T>({
     url,
     query,
@@ -133,7 +135,13 @@ export function httpGet<T>(url: string, query?: Record<string, any>, header?: Re
  * @param header 请求头，默认为json格式
  * @returns
  */
-export function httpPost<T>(url: string, data?: Record<string, any>, query?: Record<string, any>, header?: Record<string, any>, options?: Partial<CustomRequestOptions>) {
+export function httpPost<T>(
+  url: string,
+  data?: Record<string, any>,
+  query?: Record<string, any>,
+  header?: Record<string, any>,
+  options?: Partial<CustomRequestOptions>
+) {
   return http<T>({
     url,
     query,
@@ -146,7 +154,13 @@ export function httpPost<T>(url: string, data?: Record<string, any>, query?: Rec
 /**
  * PUT 请求
  */
-export function httpPut<T>(url: string, data?: Record<string, any>, query?: Record<string, any>, header?: Record<string, any>, options?: Partial<CustomRequestOptions>) {
+export function httpPut<T>(
+  url: string,
+  data?: Record<string, any>,
+  query?: Record<string, any>,
+  header?: Record<string, any>,
+  options?: Partial<CustomRequestOptions>
+) {
   return http<T>({
     url,
     data,
@@ -160,7 +174,12 @@ export function httpPut<T>(url: string, data?: Record<string, any>, query?: Reco
 /**
  * DELETE 请求（无请求体，仅 query）
  */
-export function httpDelete<T>(url: string, query?: Record<string, any>, header?: Record<string, any>, options?: Partial<CustomRequestOptions>) {
+export function httpDelete<T>(
+  url: string,
+  query?: Record<string, any>,
+  header?: Record<string, any>,
+  options?: Partial<CustomRequestOptions>
+) {
   return http<T>({
     url,
     query,

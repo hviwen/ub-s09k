@@ -1,9 +1,7 @@
 import type { IUserInfoRes } from '@/api/types/login'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import {
-  getUserInfo,
-} from '@/api/login'
+import { getUserInfo } from '@/api/login'
 import { usePermissionStore } from '@/permission/store/permissionStore'
 import { UserRole } from '@/permission/types'
 
@@ -59,8 +57,7 @@ export const useUserStore = defineStore(
 
           // 根据用户信息设置角色
           await initializeUserRole(res.data)
-        }
-        catch (error) {
+        } catch (error) {
           console.error('初始化权限系统失败:', error)
         }
       }
@@ -168,5 +165,5 @@ export const useUserStore = defineStore(
   },
   {
     persist: true,
-  },
+  }
 )

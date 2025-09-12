@@ -17,15 +17,15 @@ export const TABBAR_STRATEGY_MAP = {
 }
 
 // TODO: 1/3. 通过这里切换使用tabbar的策略
-// 如果是使用 NO_TABBAR(0)，nativeTabbarList 和 customTabbarList 都不生效(里面的配置不用管)
-// 如果是使用 NATIVE_TABBAR(1)，只需要配置 nativeTabbarList，customTabbarList 不生效
-// 如果是使用 CUSTOM_TABBAR(2,3)，只需要配置 customTabbarList，nativeTabbarList 不生效
-export const selectedTabbarStrategy = TABBAR_STRATEGY_MAP.CUSTOM_TABBAR_WITH_CACHE
+// 如果是使用 NO_TABBAR(0)，nativeTabBarList 和 customTabBarList 都不生效(里面的配置不用管)
+// 如果是使用 NATIVE_TABBAR(1)，只需要配置 nativeTabBarList，customTabBarList 不生效
+// 如果是使用 CUSTOM_TABBAR(2,3)，只需要配置 customTabBarList，nativeTabBarList 不生效
+export const selectedTabBarStrategy = TABBAR_STRATEGY_MAP.CUSTOM_TABBAR_WITH_CACHE
 
 type NativeTabBarItem = TabBar['list'][number]
 
 // TODO: 2/3. 使用 NATIVE_TABBAR 时，更新下面的 tabbar 配置
-export const nativeTabbarList: NativeTabBarItem[] = [
+export const nativeTabBarList: NativeTabBarItem[] = [
   {
     iconPath: 'static/tabbar/home.png',
     selectedIconPath: 'static/tabbar/homeHL.png',
@@ -60,7 +60,7 @@ export interface CustomTabBarItem {
 }
 // TODO: 3/3. 使用 CUSTOM_TABBAR(2,3) 时，更新下面的 tabbar 配置
 // 如果需要配置鼓包，需要在 'tabbar/store.ts' 里面设置，最后在 `tabbar/index.vue` 里面更改鼓包的图片
-export const customTabbarList: CustomTabBarItem[] = [
+export const customTabBarList: CustomTabBarItem[] = [
   {
     text: '首页',
     pagePath: 'pages/index/index',
@@ -119,28 +119,34 @@ export const customTabbarList: CustomTabBarItem[] = [
  * 是否启用 tabbar 缓存
  * NATIVE_TABBAR(1) 和 CUSTOM_TABBAR_WITH_CACHE(2) 时，需要tabbar缓存
  */
-export const tabbarCacheEnable
-  = [TABBAR_STRATEGY_MAP.NATIVE_TABBAR, TABBAR_STRATEGY_MAP.CUSTOM_TABBAR_WITH_CACHE].includes(selectedTabbarStrategy)
+export const tabBarCacheEnable = [
+  TABBAR_STRATEGY_MAP.NATIVE_TABBAR,
+  TABBAR_STRATEGY_MAP.CUSTOM_TABBAR_WITH_CACHE,
+].includes(selectedTabBarStrategy)
 
 /**
  * 是否启用自定义 tabbar
  * CUSTOM_TABBAR(2,3) 时，启用自定义tabbar
  */
-export const customTabbarEnable
-  = [TABBAR_STRATEGY_MAP.CUSTOM_TABBAR_WITH_CACHE, TABBAR_STRATEGY_MAP.CUSTOM_TABBAR_WITHOUT_CACHE].includes(selectedTabbarStrategy)
+export const customTabBarEnable = [
+  TABBAR_STRATEGY_MAP.CUSTOM_TABBAR_WITH_CACHE,
+  TABBAR_STRATEGY_MAP.CUSTOM_TABBAR_WITHOUT_CACHE,
+].includes(selectedTabBarStrategy)
 
 /**
  * 是否需要隐藏原生 tabbar
  * CUSTOM_TABBAR_WITH_CACHE(2) 时，需要隐藏原生tabbar
  */
-export const needHideNativeTabbar = selectedTabbarStrategy === TABBAR_STRATEGY_MAP.CUSTOM_TABBAR_WITH_CACHE
+export const needHideNativeTabBar = selectedTabBarStrategy === TABBAR_STRATEGY_MAP.CUSTOM_TABBAR_WITH_CACHE
 
-const _tabbarList = customTabbarEnable ? customTabbarList.map(item => ({ text: item.text, pagePath: item.pagePath })) : nativeTabbarList
-export const tabbarList = customTabbarEnable ? customTabbarList : nativeTabbarList
+const _tabBarList = customTabBarEnable
+  ? customTabBarList.map(item => ({ text: item.text, pagePath: item.pagePath }))
+  : nativeTabBarList
+export const tabBarList = customTabBarEnable ? customTabBarList : nativeTabBarList
 
-const _tabbar: TabBar = {
+const _tabBar: TabBar = {
   // 只有微信小程序支持 custom。App 和 H5 不生效
-  custom: selectedTabbarStrategy === TABBAR_STRATEGY_MAP.CUSTOM_TABBAR_WITH_CACHE,
+  custom: selectedTabBarStrategy === TABBAR_STRATEGY_MAP.CUSTOM_TABBAR_WITH_CACHE,
   color: '#999999',
   selectedColor: '#018d71',
   backgroundColor: '#F8F8F8',
@@ -149,7 +155,7 @@ const _tabbar: TabBar = {
   fontSize: '10px',
   iconWidth: '24px',
   spacing: '3px',
-  list: _tabbarList as unknown as TabBar['list'],
+  list: _tabBarList as unknown as TabBar['list'],
 }
 
-export const tabBar = tabbarCacheEnable ? _tabbar : undefined
+export const tabBar = tabBarCacheEnable ? _tabBar : undefined

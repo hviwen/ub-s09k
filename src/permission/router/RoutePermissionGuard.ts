@@ -6,7 +6,7 @@
  */
 
 import type { IRoutePermissionGuard } from '../interfaces'
-import type { AccessControlAction, UserRole } from '../types'
+import { AccessControlAction, UserRole } from '../types'
 
 // ==================== 路由权限规则定义 ====================
 
@@ -74,28 +74,24 @@ export class RoutePermissionGuard implements IRoutePermissionGuard {
     this.registerPageRule('/pages/about/*', Object.values(UserRole))
 
     // 个人中心 - 需要登录
-    this.registerPageRule('/pages/me/*', [
-      UserRole.REGULAR,
-      UserRole.CHANNEL,
-      UserRole.INSTITUTIONAL,
-      UserRole.ADMIN,
-    ], '/pages/login/login')
+    this.registerPageRule(
+      '/pages/me/*',
+      [UserRole.REGULAR, UserRole.CHANNEL, UserRole.INSTITUTIONAL, UserRole.ADMIN],
+      '/pages/login/login'
+    )
 
     // 管理页面 - 仅管理员
     this.registerPageRule('/pages/admin/*', [UserRole.ADMIN], '/pages/login/login')
 
     // 机构页面 - 机构用户和管理员
-    this.registerPageRule('/pages/institutional/*', [
-      UserRole.INSTITUTIONAL,
-      UserRole.ADMIN,
-    ], '/pages/role/switch')
+    this.registerPageRule('/pages/institutional/*', [UserRole.INSTITUTIONAL, UserRole.ADMIN], '/pages/role/switch')
 
     // 渠道页面 - 渠道用户、机构用户和管理员
-    this.registerPageRule('/pages/channel/*', [
-      UserRole.CHANNEL,
-      UserRole.INSTITUTIONAL,
-      UserRole.ADMIN,
-    ], '/pages/role/switch')
+    this.registerPageRule(
+      '/pages/channel/*',
+      [UserRole.CHANNEL, UserRole.INSTITUTIONAL, UserRole.ADMIN],
+      '/pages/role/switch'
+    )
 
     if (this.debugMode) {
       console.log('路由权限守卫默认规则初始化完成')
@@ -163,8 +159,7 @@ export class RoutePermissionGuard implements IRoutePermissionGuard {
         message: '权限检查通过',
         matchedRule,
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.error('页面权限检查失败:', error)
       return {
         allowed: false,
@@ -185,12 +180,7 @@ export class RoutePermissionGuard implements IRoutePermissionGuard {
   /**
    * 注册页面权限规则
    */
-  registerPageRule(
-    pathPattern: string,
-    requiredRoles: UserRole[],
-    redirectUrl?: string,
-    priority: number = 0,
-  ): void {
+  registerPageRule(pathPattern: string, requiredRoles: UserRole[], redirectUrl?: string, priority: number = 0): void {
     const rule: PagePermissionRule = {
       pathPattern,
       requiredRoles,
@@ -212,7 +202,7 @@ export class RoutePermissionGuard implements IRoutePermissionGuard {
   /**
    * 批量注册页面权限规则
    */
-  batchRegisterPageRules(rules: Record<string, { roles: UserRole[], redirect?: string, priority?: number }>): void {
+  batchRegisterPageRules(rules: Record<string, { roles: UserRole[]; redirect?: string; priority?: number }>): void {
     Object.entries(rules).forEach(([path, config]) => {
       this.registerPageRule(path, config.roles, config.redirect, config.priority || 0)
     })
@@ -255,9 +245,7 @@ export class RoutePermissionGuard implements IRoutePermissionGuard {
 
     // 通配符匹配
     if (pattern.includes('*')) {
-      const regexPattern = pattern
-        .replace(/\*/g, '.*')
-        .replace(/\?/g, '.')
+      const regexPattern = pattern.replace(/\*/g, '.*').replace(/\?/g, '.')
 
       const regex = new RegExp(`^${regexPattern}$`)
       return regex.test(path)
@@ -281,7 +269,7 @@ export class RoutePermissionGuard implements IRoutePermissionGuard {
     }
 
     // 检查是否需要角色切换
-    const hasHigherRole = rule.requiredRoles.some((requiredRole) => {
+    const hasHigherRole = rule.requiredRoles.some(requiredRole => {
       return this.isHigherRole(requiredRole, role)
     })
 
@@ -348,13 +336,13 @@ export class RoutePermissionGuard implements IRoutePermissionGuard {
     }
 
     // 初始化角色统计
-    Object.values(UserRole).forEach((role) => {
+    Object.values(UserRole).forEach(role => {
       stats.rulesByRole[role] = 0
     })
 
     // 统计规则
-    this.pageRules.forEach((rule) => {
-      rule.requiredRoles.forEach((role) => {
+    this.pageRules.forEach(rule => {
+      rule.requiredRoles.forEach(role => {
         stats.rulesByRole[role]++
       })
 

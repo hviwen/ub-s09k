@@ -6,13 +6,7 @@
  */
 
 import type { IRoleManager } from '../interfaces'
-import type {
-  Role,
-  RoleSwitchOptions,
-  RoleSwitchRecord,
-  UserRole,
-  UserRoleInfo,
-} from '../types'
+import type { Role, RoleSwitchOptions, RoleSwitchRecord, UserRole, UserRoleInfo } from '../types'
 import { RoleStateManager } from './RoleStateManager'
 
 // ==================== 事件定义 ====================
@@ -89,11 +83,10 @@ export class RoleSwitchService implements IRoleManager {
    * 触发角色切换事件
    */
   private emitEvent(event: RoleSwitchEvent): void {
-    this.listeners.forEach((listener) => {
+    this.listeners.forEach(listener => {
       try {
         listener.onRoleSwitchEvent(event)
-      }
-      catch (error) {
+      } catch (error) {
         console.error('角色切换事件监听器执行失败:', error)
       }
     })
@@ -132,8 +125,7 @@ export class RoleSwitchService implements IRoleManager {
     try {
       const result = await switchPromise
       return result
-    }
-    finally {
+    } finally {
       // 清理队列和锁
       this.switchQueue.delete(userKey)
       this.switchLocks.delete(userKey)
@@ -236,8 +228,7 @@ export class RoleSwitchService implements IRoleManager {
       }
 
       return switchResult
-    }
-    catch (error) {
+    } catch (error) {
       console.error('角色切换失败:', error)
 
       // 触发切换失败事件
@@ -260,8 +251,8 @@ export class RoleSwitchService implements IRoleManager {
   private async preRoleSwitchCheck(
     userId: string | number,
     fromRole: UserRole,
-    toRole: UserRole,
-  ): Promise<{ success: boolean, message?: string }> {
+    toRole: UserRole
+  ): Promise<{ success: boolean; message?: string }> {
     try {
       // 检查用户状态
       const userStatus = await this.checkUserStatus(userId)
@@ -282,8 +273,7 @@ export class RoleSwitchService implements IRoleManager {
       }
 
       return { success: true }
-    }
-    catch (error) {
+    } catch (error) {
       console.error('预切换检查失败:', error)
       return { success: false, message: '预切换检查异常' }
     }
@@ -292,11 +282,7 @@ export class RoleSwitchService implements IRoleManager {
   /**
    * 后切换处理
    */
-  private async postRoleSwitchProcess(
-    userId: string | number,
-    fromRole: UserRole,
-    toRole: UserRole,
-  ): Promise<void> {
+  private async postRoleSwitchProcess(userId: string | number, fromRole: UserRole, toRole: UserRole): Promise<void> {
     try {
       // 清理旧角色相关缓存
       await this.clearRoleCache(userId, fromRole)
@@ -311,8 +297,7 @@ export class RoleSwitchService implements IRoleManager {
       await this.updateLocalStorage(userId, toRole)
 
       console.log(`用户 ${userId} 角色切换后处理完成: ${fromRole} -> ${toRole}`)
-    }
-    catch (error) {
+    } catch (error) {
       console.error('后切换处理失败:', error)
     }
   }
@@ -341,15 +326,15 @@ export class RoleSwitchService implements IRoleManager {
   private async checkBusinessRules(
     userId: string | number,
     fromRole: UserRole,
-    toRole: UserRole,
-  ): Promise<{ success: boolean, message?: string }> {
+    toRole: UserRole
+  ): Promise<{ success: boolean; message?: string }> {
     // 这里可以添加业务规则检查
     // 例如：检查切换频率限制、特殊时间段限制等
 
     // 示例：检查切换频率限制
     const switchHistory = await this.getRoleSwitchHistory(userId, 5)
     const recentSwitches = switchHistory.filter(
-      record => Date.now() - record.switchTime < 60 * 1000, // 1分钟内
+      record => Date.now() - record.switchTime < 60 * 1000 // 1分钟内
     )
 
     if (recentSwitches.length >= 3) {
@@ -369,7 +354,7 @@ export class RoleSwitchService implements IRoleManager {
       `role_config_${userId}_${role}`,
     ]
 
-    cacheKeys.forEach((key) => {
+    cacheKeys.forEach(key => {
       uni.removeStorageSync(key)
     })
   }
@@ -384,8 +369,7 @@ export class RoleSwitchService implements IRoleManager {
       if (permissions) {
         uni.setStorageSync(`role_permissions_${userId}_${role}`, permissions.currentRole.permissions)
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.error('预加载角色数据失败:', error)
     }
   }
@@ -397,8 +381,7 @@ export class RoleSwitchService implements IRoleManager {
     try {
       // 这里可以添加与服务器同步的逻辑
       console.log(`同步用户 ${userId} 的角色状态 ${role} 到服务器`)
-    }
-    catch (error) {
+    } catch (error) {
       console.error('同步角色状态到服务器失败:', error)
     }
   }

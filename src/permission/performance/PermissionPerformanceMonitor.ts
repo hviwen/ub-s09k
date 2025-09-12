@@ -195,19 +195,14 @@ export class PermissionPerformanceMonitor {
   /**
    * 监控异步操作
    */
-  async monitorAsync<T>(
-    operation: string,
-    asyncFn: () => Promise<T>,
-    metadata?: Record<string, any>,
-  ): Promise<T> {
+  async monitorAsync<T>(operation: string, asyncFn: () => Promise<T>, metadata?: Record<string, any>): Promise<T> {
     const operationId = this.startOperation(operation, metadata)
 
     try {
       const result = await asyncFn()
       this.endOperation(operationId, true, undefined, metadata)
       return result
-    }
-    catch (error) {
+    } catch (error) {
       this.endOperation(operationId, false, error instanceof Error ? error.message : String(error), metadata)
       throw error
     }
@@ -216,19 +211,14 @@ export class PermissionPerformanceMonitor {
   /**
    * 监控同步操作
    */
-  monitorSync<T>(
-    operation: string,
-    syncFn: () => T,
-    metadata?: Record<string, any>,
-  ): T {
+  monitorSync<T>(operation: string, syncFn: () => T, metadata?: Record<string, any>): T {
     const operationId = this.startOperation(operation, metadata)
 
     try {
       const result = syncFn()
       this.endOperation(operationId, true, undefined, metadata)
       return result
-    }
-    catch (error) {
+    } catch (error) {
       this.endOperation(operationId, false, error instanceof Error ? error.message : String(error), metadata)
       throw error
     }
@@ -253,7 +243,7 @@ export class PermissionPerformanceMonitor {
   /**
    * 生成性能报告
    */
-  generateReport(timeRange?: { start: number, end: number }): PerformanceReport {
+  generateReport(timeRange?: { start: number; end: number }): PerformanceReport {
     const now = Date.now()
     const range = timeRange || {
       start: now - 24 * 60 * 60 * 1000, // 默认24小时
@@ -262,17 +252,15 @@ export class PermissionPerformanceMonitor {
 
     // 过滤时间范围内的指标
     const filteredMetrics = this.metrics.filter(
-      metric => metric.startTime >= range.start && metric.startTime <= range.end,
+      metric => metric.startTime >= range.start && metric.startTime <= range.end
     )
 
     // 计算总体统计
     const totalOperations = filteredMetrics.length
-    const averageDuration = totalOperations > 0
-      ? filteredMetrics.reduce((sum, metric) => sum + metric.duration, 0) / totalOperations
-      : 0
-    const successRate = totalOperations > 0
-      ? filteredMetrics.filter(metric => metric.success).length / totalOperations
-      : 1
+    const averageDuration =
+      totalOperations > 0 ? filteredMetrics.reduce((sum, metric) => sum + metric.duration, 0) / totalOperations : 0
+    const successRate =
+      totalOperations > 0 ? filteredMetrics.filter(metric => metric.success).length / totalOperations : 1
 
     // 获取操作统计
     const operations = this.getAllStats()
@@ -344,8 +332,7 @@ export class PermissionPerformanceMonitor {
       existing.totalCalls++
       if (metric.success) {
         existing.successCalls++
-      }
-      else {
+      } else {
         existing.failedCalls++
       }
 
@@ -358,8 +345,7 @@ export class PermissionPerformanceMonitor {
 
       existing.successRate = existing.successCalls / existing.totalCalls
       existing.lastUpdated = Date.now()
-    }
-    else {
+    } else {
       const newStats: PerformanceStats = {
         operation: metric.operation,
         totalCalls: 1,
@@ -405,7 +391,7 @@ export class PermissionPerformanceMonitor {
       }
 
       // 检查高失败率
-      if (op.successRate < (1 - this.config.highFailureRateThreshold)) {
+      if (op.successRate < 1 - this.config.highFailureRateThreshold) {
         warnings.push({
           type: 'high_failure_rate',
           level: op.successRate < 0.5 ? 'error' : 'warning',
@@ -425,14 +411,12 @@ export class PermissionPerformanceMonitor {
    */
   private generateRecommendations(
     operations: PerformanceStats[],
-    warnings: PerformanceWarning[],
+    warnings: PerformanceWarning[]
   ): PerformanceRecommendation[] {
     const recommendations: PerformanceRecommendation[] = []
 
     // 基于慢操作的建议
-    const slowOperations = warnings
-      .filter(w => w.type === 'slow_operation')
-      .map(w => w.operation!)
+    const slowOperations = warnings.filter(w => w.type === 'slow_operation').map(w => w.operation!)
 
     if (slowOperations.length > 0) {
       if (slowOperations.some(op => op.includes('permission_check'))) {
@@ -459,9 +443,7 @@ export class PermissionPerformanceMonitor {
     }
 
     // 基于高失败率的建议
-    const failedOperations = warnings
-      .filter(w => w.type === 'high_failure_rate')
-      .map(w => w.operation!)
+    const failedOperations = warnings.filter(w => w.type === 'high_failure_rate').map(w => w.operation!)
 
     if (failedOperations.length > 0) {
       recommendations.push({
@@ -535,11 +517,10 @@ export function monitorPerformance(operation: string) {
     const monitor = getPermissionPerformanceMonitor()
 
     descriptor.value = async function (...args: any[]) {
-      return await monitor.monitorAsync(
-        `${operation}_${propertyKey}`,
-        () => originalMethod.apply(this, args),
-        { className: target.constructor.name, method: propertyKey },
-      )
+      return await monitor.monitorAsync(`${operation}_${propertyKey}`, () => originalMethod.apply(this, args), {
+        className: target.constructor.name,
+        method: propertyKey,
+      })
     }
 
     return descriptor

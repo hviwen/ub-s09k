@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useThemeStore } from '@/store'
-import FgTabbar from '@/tabbar/index.vue'
-import { isPageTabbar } from './tabbar/store'
+import CTTabBar from '@/tabbar/index.vue'
+import { isPageTabBar } from './tabbar/store'
 import { currRoute } from './utils'
 
 const themeStore = useThemeStore()
 
-const isCurrentPageTabbar = ref(true)
+const isCurrentPageTabBar = ref(true)
 onShow(() => {
   console.log('App.ku.vue onShow', currRoute())
   const { path } = currRoute()
-  isCurrentPageTabbar.value = isPageTabbar(path)
+  isCurrentPageTabBar.value = isPageTabBar(path)
 })
 
 const helloKuRoot = ref('Hello AppKuVue')
@@ -32,7 +32,7 @@ defineExpose({
 
     <KuRootView />
 
-    <FgTabbar v-if="isCurrentPageTabbar" />
+    <CTTabBar v-if="isCurrentPageTabBar" />
     <wd-toast />
     <wd-message-box />
   </wd-config-provider>

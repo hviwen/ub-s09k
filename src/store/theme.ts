@@ -9,11 +9,7 @@ export const useThemeStore = defineStore(
     const theme = ref<'light' | 'dark'>('light')
 
     /** 主题变量 */
-    const themeVars = ref<ConfigProviderThemeVars>({
-      // colorTheme: 'red',
-      // buttonPrimaryBgColor: '#07c160',
-      // buttonPrimaryColor: '#07c160',
-    })
+    const themeVars = ref<ConfigProviderThemeVars>({})
 
     /** 设置主题变量 */
     const setThemeVars = (partialVars: Partial<ConfigProviderThemeVars>) => {
@@ -38,5 +34,5 @@ export const useThemeStore = defineStore(
   },
   {
     persist: true,
-  },
+  }
 )

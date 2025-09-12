@@ -157,11 +157,14 @@ export const MOCK_RESOURCE_TYPES = {
 /**
  * 断言权限检查结果
  */
-export function expectPermissionResult(result: any, expected: {
-  hasPermission: boolean
-  action?: string
-  message?: string
-}) {
+export function expectPermissionResult(
+  result: any,
+  expected: {
+    hasPermission: boolean
+    action?: string
+    message?: string
+  }
+) {
   expect(result).toBeDefined()
   expect(result.hasPermission).toBe(expected.hasPermission)
 
@@ -214,8 +217,8 @@ export function expectStorageOperation(operation: 'get' | 'set' | 'remove', key?
  */
 export async function measureExecutionTime<T>(
   fn: () => Promise<T> | T,
-  description?: string,
-): Promise<{ result: T, duration: number }> {
+  description?: string
+): Promise<{ result: T; duration: number }> {
   const startTime = Date.now()
   const result = await fn()
   const duration = Date.now() - startTime
@@ -240,10 +243,7 @@ export function expectExecutionTime(duration: number, maxDuration: number, opera
 /**
  * 并发执行多个操作
  */
-export async function runConcurrently<T>(
-  operations: (() => Promise<T>)[],
-  description?: string,
-): Promise<T[]> {
+export async function runConcurrently<T>(operations: (() => Promise<T>)[], description?: string): Promise<T[]> {
   if (description) {
     console.debug(`开始并发执行 ${operations.length} 个操作: ${description}`)
   }
@@ -262,10 +262,7 @@ export async function runConcurrently<T>(
 /**
  * 测试竞态条件
  */
-export async function testRaceCondition<T>(
-  operation: () => Promise<T>,
-  concurrency: number = 10,
-): Promise<T[]> {
+export async function testRaceCondition<T>(operation: () => Promise<T>, concurrency: number = 10): Promise<T[]> {
   const operations = Array.from({ length: concurrency }, () => operation)
   return runConcurrently(operations, `竞态条件测试 (并发数: ${concurrency})`)
 }
@@ -275,14 +272,10 @@ export async function testRaceCondition<T>(
 /**
  * 断言抛出特定错误
  */
-export async function expectToThrowError(
-  fn: () => Promise<any> | any,
-  expectedError?: string | RegExp | Error,
-) {
+export async function expectToThrowError(fn: () => Promise<any> | any, expectedError?: string | RegExp | Error) {
   if (expectedError) {
     await expect(fn).rejects.toThrow(expectedError)
-  }
-  else {
+  } else {
     await expect(fn).rejects.toThrow()
   }
 }
@@ -315,7 +308,7 @@ export function cleanupTestEnvironment() {
 
   // 重置模拟的uni API
   if (global.uni) {
-    Object.keys(global.uni).forEach((key) => {
+    Object.keys(global.uni).forEach(key => {
       if (typeof global.uni[key] === 'function') {
         vi.mocked(global.uni[key]).mockReset()
       }

@@ -104,7 +104,7 @@ export class PermissionApiService implements IPermissionApiService {
   private baseUrl: string
   private debugMode: boolean
 
-  constructor(options: { baseUrl?: string, debugMode?: boolean } = {}) {
+  constructor(options: { baseUrl?: string; debugMode?: boolean } = {}) {
     this.baseUrl = options.baseUrl || '/api/permission'
     this.debugMode = options.debugMode || false
   }
@@ -121,8 +121,7 @@ export class PermissionApiService implements IPermissionApiService {
       const response = await http.get<UserRoleApiResponse>(`${this.baseUrl}/users/${userId}/roles`)
 
       return this.transformUserRoleResponse(response.data)
-    }
-    catch (error) {
+    } catch (error) {
       console.error('获取用户角色信息失败:', error)
       throw new Error('获取用户角色信息失败')
     }
@@ -140,8 +139,7 @@ export class PermissionApiService implements IPermissionApiService {
       const response = await http.get<PermissionApiData[]>(`${this.baseUrl}/roles/${role}/permissions`)
 
       return response.data.map(this.transformPermissionData)
-    }
-    catch (error) {
+    } catch (error) {
       console.error('获取角色权限失败:', error)
       throw new Error('获取角色权限失败')
     }
@@ -153,24 +151,23 @@ export class PermissionApiService implements IPermissionApiService {
   async requestRoleSwitch(
     userId: string | number,
     targetRole: UserRole,
-    reason?: string,
-  ): Promise<{ success: boolean, message?: string }> {
+    reason?: string
+  ): Promise<{ success: boolean; message?: string }> {
     try {
       if (this.debugMode) {
         console.log(`申请角色切换: ${userId} -> ${targetRole}`)
       }
 
-      const response = await http.post<{ success: boolean, message?: string }>(
+      const response = await http.post<{ success: boolean; message?: string }>(
         `${this.baseUrl}/users/${userId}/role-switch`,
         {
           targetRole,
           reason,
-        },
+        }
       )
 
       return response.data
-    }
-    catch (error) {
+    } catch (error) {
       console.error('申请角色切换失败:', error)
       return {
         success: false,
@@ -188,20 +185,16 @@ export class PermissionApiService implements IPermissionApiService {
         console.log('验证权限:', context)
       }
 
-      const response = await http.post<PermissionValidationApiResponse>(
-        `${this.baseUrl}/validate`,
-        {
-          userId: context.userRole.userId,
-          currentRole: context.userRole.currentRole.type,
-          resource: context.resource,
-          action: context.action,
-          extra: context.extra,
-        },
-      )
+      const response = await http.post<PermissionValidationApiResponse>(`${this.baseUrl}/validate`, {
+        userId: context.userRole.userId,
+        currentRole: context.userRole.currentRole.type,
+        resource: context.resource,
+        action: context.action,
+        extra: context.extra,
+      })
 
       return this.transformPermissionValidationResponse(response.data)
-    }
-    catch (error) {
+    } catch (error) {
       console.error('权限验证失败:', error)
       return {
         hasPermission: false,
@@ -220,13 +213,10 @@ export class PermissionApiService implements IPermissionApiService {
         console.log(`获取内容访问规则: ${contentId}`)
       }
 
-      const response = await http.get<ContentAccessRuleApiResponse>(
-        `${this.baseUrl}/content/${contentId}/access-rules`,
-      )
+      const response = await http.get<ContentAccessRuleApiResponse>(`${this.baseUrl}/content/${contentId}/access-rules`)
 
       return this.transformContentAccessRuleResponse(response.data)
-    }
-    catch (error) {
+    } catch (error) {
       console.error('获取内容访问规则失败:', error)
       throw new Error('获取内容访问规则失败')
     }
@@ -235,23 +225,18 @@ export class PermissionApiService implements IPermissionApiService {
   /**
    * 获取用户角色切换历史
    */
-  async fetchRoleSwitchHistory(
-    userId: string | number,
-    limit: number = 20,
-  ): Promise<RoleSwitchRecord[]> {
+  async fetchRoleSwitchHistory(userId: string | number, limit: number = 20): Promise<RoleSwitchRecord[]> {
     try {
       if (this.debugMode) {
         console.log(`获取角色切换历史: ${userId}`)
       }
 
-      const response = await http.get<RoleSwitchApiData[]>(
-        `${this.baseUrl}/users/${userId}/role-switch-history`,
-        { limit },
-      )
+      const response = await http.get<RoleSwitchApiData[]>(`${this.baseUrl}/users/${userId}/role-switch-history`, {
+        limit,
+      })
 
       return response.data.map(this.transformRoleSwitchData)
-    }
-    catch (error) {
+    } catch (error) {
       console.error('获取角色切换历史失败:', error)
       return []
     }
@@ -266,22 +251,18 @@ export class PermissionApiService implements IPermissionApiService {
         console.log('批量验证权限:', contexts.length)
       }
 
-      const response = await http.post<PermissionValidationApiResponse[]>(
-        `${this.baseUrl}/batch-validate`,
-        {
-          contexts: contexts.map(context => ({
-            userId: context.userRole.userId,
-            currentRole: context.userRole.currentRole.type,
-            resource: context.resource,
-            action: context.action,
-            extra: context.extra,
-          })),
-        },
-      )
+      const response = await http.post<PermissionValidationApiResponse[]>(`${this.baseUrl}/batch-validate`, {
+        contexts: contexts.map(context => ({
+          userId: context.userRole.userId,
+          currentRole: context.userRole.currentRole.type,
+          resource: context.resource,
+          action: context.action,
+          extra: context.extra,
+        })),
+      })
 
       return response.data.map(this.transformPermissionValidationResponse)
-    }
-    catch (error) {
+    } catch (error) {
       console.error('批量权限验证失败:', error)
       return contexts.map(() => ({
         hasPermission: false,
@@ -306,8 +287,7 @@ export class PermissionApiService implements IPermissionApiService {
       })
 
       return true
-    }
-    catch (error) {
+    } catch (error) {
       console.error('同步用户角色状态失败:', error)
       return false
     }
@@ -324,8 +304,7 @@ export class PermissionApiService implements IPermissionApiService {
 
       const response = await http.get(`${this.baseUrl}/config`)
       return response.data
-    }
-    catch (error) {
+    } catch (error) {
       console.error('获取权限配置失败:', error)
       return {}
     }

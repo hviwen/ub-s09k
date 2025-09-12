@@ -6,11 +6,8 @@
  */
 
 import type { IContentAccessController } from '../interfaces'
-import type {
-  AccessControlAction,
-  ContentAccessConfig,
-  UserRole,
-} from '../types'
+import type { ContentAccessConfig } from '../types'
+import { AccessControlAction, UserRole } from '../types'
 
 // ==================== 内容访问规则定义 ====================
 
@@ -45,7 +42,7 @@ interface ContentAccessContext {
   contentId: string
   timestamp: number
   userAgent?: string
-  location?: { latitude: number, longitude: number }
+  location?: { latitude: number; longitude: number }
   extra?: Record<string, any>
 }
 
@@ -129,11 +126,7 @@ export class ContentAccessController implements IContentAccessController {
   /**
    * 检查内容访问权限
    */
-  async checkContentAccess(
-    contentId: string,
-    role: UserRole,
-    context?: any,
-  ): Promise<AccessControlAction> {
+  async checkContentAccess(contentId: string, role: UserRole, context?: any): Promise<AccessControlAction> {
     try {
       const accessContext: ContentAccessContext = {
         userId: context?.userId || 'anonymous',
@@ -168,8 +161,7 @@ export class ContentAccessController implements IContentAccessController {
 
       // 默认策略
       return this.getDefaultAccessAction(role)
-    }
-    catch (error) {
+    } catch (error) {
       console.error('内容访问检查失败:', error)
       return AccessControlAction.COMPLETE_RESTRICTION
     }
@@ -221,7 +213,10 @@ export class ContentAccessController implements IContentAccessController {
   /**
    * 评估访问规则
    */
-  private async evaluateRule(rule: ContentAccessRule, context: ContentAccessContext): Promise<ContentAccessResult | null> {
+  private async evaluateRule(
+    rule: ContentAccessRule,
+    context: ContentAccessContext
+  ): Promise<ContentAccessResult | null> {
     // 检查条件
     if (rule.conditions) {
       for (const condition of rule.conditions) {
@@ -322,14 +317,22 @@ export class ContentAccessController implements IContentAccessController {
     const rule: ContentAccessRule = {
       contentId: config.contentId,
       contentType: config.contentType,
-      roleRules: new Map(Object.entries(config.roleAccessRules)),
+      roleRules: new Map(
+        Object.entries(config.roleAccessRules).map(([key, value]) => [
+          UserRole[key as keyof typeof UserRole],
+          value as AccessControlAction,
+        ])
+      ),
       defaultAction: config.defaultAction,
       conditions: config.customChecker
-        ? [{
-            type: 'custom',
-            condition: context => config.customChecker!(context.role, context) === AccessControlAction.UNRESTRICTED_ACCESS,
-            action: AccessControlAction.UNRESTRICTED_ACCESS,
-          }]
+        ? [
+            {
+              type: 'custom',
+              condition: context =>
+                config.customChecker!(context.role, context) === AccessControlAction.UNRESTRICTED_ACCESS,
+              action: AccessControlAction.UNRESTRICTED_ACCESS,
+            },
+          ]
         : undefined,
     }
 
@@ -343,14 +346,11 @@ export class ContentAccessController implements IContentAccessController {
   /**
    * 批量检查内容访问权限
    */
-  async batchCheckContentAccess(
-    contentIds: string[],
-    role: UserRole,
-  ): Promise<Record<string, AccessControlAction>> {
+  async batchCheckContentAccess(contentIds: string[], role: UserRole): Promise<Record<string, AccessControlAction>> {
     const results: Record<string, AccessControlAction> = {}
 
     // 并行检查所有内容
-    const promises = contentIds.map(async (contentId) => {
+    const promises = contentIds.map(async contentId => {
       const action = await this.checkContentAccess(contentId, role)
       return { contentId, action }
     })
@@ -367,10 +367,7 @@ export class ContentAccessController implements IContentAccessController {
   /**
    * 添加内容访问条件
    */
-  addContentAccessCondition(
-    contentId: string,
-    condition: ContentAccessCondition,
-  ): void {
+  addContentAccessCondition(contentId: string, condition: ContentAccessCondition): void {
     const rule = this.accessRules.get(contentId)
     if (rule) {
       if (!rule.conditions) {
@@ -386,11 +383,11 @@ export class ContentAccessController implements IContentAccessController {
   createTimeCondition(
     startTime: number,
     endTime: number,
-    action: AccessControlAction = AccessControlAction.COMPLETE_RESTRICTION,
+    action: AccessControlAction = AccessControlAction.COMPLETE_RESTRICTION
   ): ContentAccessCondition {
     return {
       type: 'time',
-      condition: (context) => {
+      condition: context => {
         const now = context.timestamp
         return now < startTime || now > endTime
       },
@@ -404,16 +401,13 @@ export class ContentAccessController implements IContentAccessController {
    */
   createDeviceCondition(
     allowedDevices: string[],
-    action: AccessControlAction = AccessControlAction.COMPLETE_RESTRICTION,
+    action: AccessControlAction = AccessControlAction.COMPLETE_RESTRICTION
   ): ContentAccessCondition {
     return {
       type: 'device',
-      condition: (context) => {
-        if (!context.userAgent)
-          return false
-        return !allowedDevices.some(device =>
-          context.userAgent!.toLowerCase().includes(device.toLowerCase()),
-        )
+      condition: context => {
+        if (!context.userAgent) return false
+        return !allowedDevices.some(device => context.userAgent!.toLowerCase().includes(device.toLowerCase()))
       },
       action,
       message: '当前设备不支持访问此内容',
@@ -469,12 +463,9 @@ export class ContentAccessController implements IContentAccessController {
    */
   clearAccessLog(userId?: string | number): void {
     if (userId) {
-      const keysToDelete = Array.from(this.accessLog.keys()).filter(key =>
-        key.startsWith(`${userId}_`),
-      )
+      const keysToDelete = Array.from(this.accessLog.keys()).filter(key => key.startsWith(`${userId}_`))
       keysToDelete.forEach(key => this.accessLog.delete(key))
-    }
-    else {
+    } else {
       this.accessLog.clear()
     }
   }

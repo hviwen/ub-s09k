@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // i-carbon-code
 import type { CustomTabBarItem } from './config'
-import { customTabbarEnable, needHideNativeTabbar, tabbarCacheEnable } from './config'
-import { tabbarList, tabbarStore } from './store'
+import { customTabBarEnable, needHideNativeTabBar, tabBarCacheEnable } from './config'
+import { tabBarList, tabBarStore } from './store'
 
 // #ifdef MP-WEIXIN
 // 将自定义节点设置成虚拟的（去掉自定义组件包裹层），更加接近Vue组件的表现，能更好的使用flex属性
@@ -23,19 +23,24 @@ function handleClickBulge() {
 
 function handleClick(index: number) {
   // 点击原来的不做操作
-  if (index === tabbarStore.curIdx) {
+  if (index === tabBarStore.curIdx) {
     return
   }
-  if (tabbarList[index].isBulge) {
+  if (tabBarList[index].isBulge) {
     handleClickBulge()
     return
   }
-  const url = tabbarList[index].pagePath
-  tabbarStore.setCurIdx(index)
-  if (tabbarCacheEnable) {
-    uni.switchTab({ url })
+  const url = tabBarList[index].pagePath
+  console.log('点击了tabbar，index=', index, 'url=', url)
+  if (!url) {
+    console.warn('tabBarList 配置错误，pagePath 不能为空')
+    return
   }
-  else {
+  tabBarStore.setCurIdx(index)
+  console.log('tabBarCacheEnable:', tabBarCacheEnable)
+  if (tabBarCacheEnable) {
+    uni.switchTab({ url })
+  } else {
     uni.navigateTo({ url })
   }
 }
@@ -43,13 +48,13 @@ function handleClick(index: number) {
 // 因为有了 custom:true， 微信里面不需要多余的hide操作
 onLoad(() => {
   // 解决原生 tabBar 未隐藏导致有2个 tabBar 的问题
-  needHideNativeTabbar
+  needHideNativeTabBar
   && uni.hideTabBar({
     fail(err) {
       console.log('hideTabBar fail: ', err)
     },
     success(res) {
-      // console.log('hideTabBar success: ', res)
+      console.log('hideTabBar success: ', res)
     },
   })
 })
@@ -57,7 +62,7 @@ onLoad(() => {
 const activeColor = 'var(--wot-color-theme, #1890ff)'
 const inactiveColor = '#666'
 function getColorByIndex(index: number) {
-  return tabbarStore.curIdx === index ? activeColor : inactiveColor
+  return tabBarStore.curIdx === index ? activeColor : inactiveColor
 }
 
 function getImageByIndex(index: number, item: CustomTabBarItem) {
@@ -65,16 +70,16 @@ function getImageByIndex(index: number, item: CustomTabBarItem) {
     console.warn('image 模式下，需要配置 iconActive (高亮时的图片），否则无法切换高亮图片')
     return item.icon
   }
-  return tabbarStore.curIdx === index ? item.iconActive : item.icon
+  return tabBarStore.curIdx === index ? item.iconActive : item.icon
 }
 </script>
 
 <template>
-  <view v-if="customTabbarEnable" class="h-50px pb-safe">
+  <view v-if="customTabBarEnable" class="h-50px pb-safe">
     <view class="border-and-fixed bg-white" @touchmove.stop.prevent>
       <view class="h-50px flex items-center">
         <view
-          v-for="(item, index) in tabbarList" :key="index"
+          v-for="(item, index) in tabBarList" :key="index"
           class="flex flex-1 flex-col items-center justify-center"
           :style="{ color: getColorByIndex(index) }"
           @click="handleClick(index)"

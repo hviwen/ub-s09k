@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+dist/
+build/
+.output/
+
+# Generated files
+*.min.js
+*.min.css
+
+# Logs
+logs/
+*.log
+
+# Cache directories
+.cache/
+.temp/
+.tmp/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Uni-app specific
+unpackage/
+platforms/
+
+# Build outputs
+*.tgz
+*.tar.gz

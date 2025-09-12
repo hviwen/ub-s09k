@@ -53,8 +53,7 @@ interface RoleDirectiveValue {
 function getPermissionStore() {
   try {
     return usePermissionStore()
-  }
-  catch (error) {
+  } catch (error) {
     console.warn('权限Store未初始化，权限指令将不生效')
     return null
   }
@@ -110,10 +109,12 @@ function disableElement(el: HTMLElement): void {
   el.setAttribute('data-permission-disabled', 'true')
 
   // 如果是表单元素，设置disabled属性
-  if (el instanceof HTMLInputElement
-    || el instanceof HTMLButtonElement
-    || el instanceof HTMLSelectElement
-    || el instanceof HTMLTextAreaElement) {
+  if (
+    el instanceof HTMLInputElement ||
+    el instanceof HTMLButtonElement ||
+    el instanceof HTMLSelectElement ||
+    el instanceof HTMLTextAreaElement
+  ) {
     el.disabled = true
   }
 }
@@ -129,10 +130,12 @@ function enableElement(el: HTMLElement): void {
     el.removeAttribute('data-permission-disabled')
 
     // 如果是表单元素，移除disabled属性
-    if (el instanceof HTMLInputElement
-      || el instanceof HTMLButtonElement
-      || el instanceof HTMLSelectElement
-      || el instanceof HTMLTextAreaElement) {
+    if (
+      el instanceof HTMLInputElement ||
+      el instanceof HTMLButtonElement ||
+      el instanceof HTMLSelectElement ||
+      el instanceof HTMLTextAreaElement
+    ) {
       el.disabled = false
     }
   }
@@ -185,7 +188,7 @@ const permissionDirective = {
  */
 async function updatePermissionElement(
   el: HTMLElement,
-  binding: DirectiveBinding<PermissionDirectiveValue>,
+  binding: DirectiveBinding<PermissionDirectiveValue>
 ): Promise<void> {
   const permissionStore = getPermissionStore()
   if (!permissionStore) {
@@ -207,11 +210,7 @@ async function updatePermissionElement(
 
     // 检查详细权限
     if (!hasPermission && value.action && value.resourceType && value.resourceId) {
-      hasPermission = await permissionStore.hasPermission(
-        value.action,
-        value.resourceType,
-        value.resourceId,
-      )
+      hasPermission = await permissionStore.hasPermission(value.action, value.resourceType, value.resourceId)
     }
 
     // 检查自定义权限
@@ -227,8 +226,7 @@ async function updatePermissionElement(
 
     // 根据权限结果更新元素状态
     updateElementState(el, hasPermission, fallback, placeholder)
-  }
-  catch (error) {
+  } catch (error) {
     console.error('权限指令检查失败:', error)
     // 出错时默认隐藏元素
     updateElementState(el, false, fallback, placeholder)
@@ -253,10 +251,7 @@ const roleDirective = {
 /**
  * 更新角色元素状态
  */
-async function updateRoleElement(
-  el: HTMLElement,
-  binding: DirectiveBinding<RoleDirectiveValue>,
-): Promise<void> {
+async function updateRoleElement(el: HTMLElement, binding: DirectiveBinding<RoleDirectiveValue>): Promise<void> {
   const permissionStore = getPermissionStore()
   if (!permissionStore) {
     return
@@ -277,8 +272,7 @@ async function updateRoleElement(
       if (mode === 'any') {
         // 任意角色匹配
         hasPermission = requiredRoles.includes(currentRole)
-      }
-      else {
+      } else {
         // 所有角色匹配（通常用于多角色用户）
         const userRoles = permissionStore.availableRoles.map(role => role.type)
         hasPermission = requiredRoles.every(role => userRoles.includes(role))
@@ -286,8 +280,7 @@ async function updateRoleElement(
     }
 
     updateElementState(el, hasPermission, fallback, placeholder)
-  }
-  catch (error) {
+  } catch (error) {
     console.error('角色指令检查失败:', error)
     updateElementState(el, false, fallback, placeholder)
   }
@@ -299,11 +292,11 @@ async function updateRoleElement(
  * 认证指令 - 检查用户是否已登录
  */
 const authDirective = {
-  mounted(el: HTMLElement, binding: DirectiveBinding<string | { fallback?: string, placeholder?: string }>) {
+  mounted(el: HTMLElement, binding: DirectiveBinding<string | { fallback?: string; placeholder?: string }>) {
     updateAuthElement(el, binding)
   },
 
-  updated(el: HTMLElement, binding: DirectiveBinding<string | { fallback?: string, placeholder?: string }>) {
+  updated(el: HTMLElement, binding: DirectiveBinding<string | { fallback?: string; placeholder?: string }>) {
     updateAuthElement(el, binding)
   },
 }
@@ -313,7 +306,7 @@ const authDirective = {
  */
 function updateAuthElement(
   el: HTMLElement,
-  binding: DirectiveBinding<string | { fallback?: string, placeholder?: string }>,
+  binding: DirectiveBinding<string | { fallback?: string; placeholder?: string }>
 ): void {
   const permissionStore = getPermissionStore()
   if (!permissionStore) {
@@ -327,8 +320,7 @@ function updateAuthElement(
   if (typeof value === 'object' && value !== null) {
     fallback = value.fallback || 'hide'
     placeholder = value.placeholder || '请先登录'
-  }
-  else if (typeof value === 'string') {
+  } else if (typeof value === 'string') {
     fallback = value
   }
 
@@ -345,7 +337,7 @@ function updateElementState(
   el: HTMLElement,
   hasPermission: boolean,
   fallback: 'hide' | 'disable' | 'placeholder',
-  placeholder: string,
+  placeholder: string
 ): void {
   // 先清除之前的状态
   showElement(el)
@@ -380,15 +372,8 @@ export function registerPermissionDirectives(app: App): void {
 
 // ==================== 导出指令 ====================
 
-export {
-  authDirective,
-  permissionDirective,
-  roleDirective,
-}
+export { authDirective, permissionDirective, roleDirective }
 
 // ==================== 类型导出 ====================
 
-export type {
-  PermissionDirectiveValue,
-  RoleDirectiveValue,
-}
+export type { PermissionDirectiveValue, RoleDirectiveValue }

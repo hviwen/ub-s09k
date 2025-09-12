@@ -6,15 +6,13 @@
  */
 
 import type { IRoleSwitchListener, RoleSwitchEvent } from '../core/RoleSwitchService'
-import {
-  AccessControlAction,
+import type {
   Permission,
   PermissionCheckResult,
   PermissionContext,
   Role,
   RoleSwitchOptions,
   RoleSwitchRecord,
-  UserRole,
   UserRoleInfo,
 } from '../types'
 import { defineStore } from 'pinia'
@@ -22,6 +20,7 @@ import { computed, ref, watch } from 'vue'
 import { ContentAccessController } from '../core/ContentAccessController'
 import { PermissionController } from '../core/PermissionController'
 import { RoleSwitchService } from '../core/RoleSwitchService'
+import { AccessControlAction, UserRole } from '../types'
 
 // ==================== 状态接口定义 ====================
 
@@ -128,6 +127,7 @@ export const usePermissionStore = defineStore(
           case 'switch_success':
             isSwitchingRole.value = false
             // 清除权限缓存
+            // eslint-disable-next-line ts/no-use-before-define
             clearPermissionCache()
             // 更新最后更新时间
             lastUpdated.value = Date.now()
@@ -138,6 +138,7 @@ export const usePermissionStore = defineStore(
             break
           case 'permissions_updated':
             // 权限更新时清除缓存
+            // eslint-disable-next-line ts/no-use-before-define
             clearPermissionCache()
             break
         }
@@ -162,9 +163,9 @@ export const usePermissionStore = defineStore(
         const roleInfo = await roleSwitchService.getCurrentUserRole(userId)
         if (roleInfo) {
           userRoleInfo.value = roleInfo
-        }
-        else {
+        } else {
           // 如果没有角色信息，创建默认游客角色
+          // eslint-disable-next-line ts/no-use-before-define
           await createDefaultGuestRole(userId)
         }
 
@@ -175,8 +176,7 @@ export const usePermissionStore = defineStore(
         lastUpdated.value = Date.now()
 
         console.log('权限系统初始化完成', { userId, roleInfo: userRoleInfo.value })
-      }
-      catch (error) {
+      } catch (error) {
         console.error('权限系统初始化失败:', error)
         throw error
       }
@@ -276,9 +276,7 @@ export const usePermissionStore = defineStore(
 
       if (success && userRoleInfo.value) {
         // 更新可用角色列表
-        userRoleInfo.value.availableRoles = userRoleInfo.value.availableRoles.filter(
-          role => role.type !== roleType,
-        )
+        userRoleInfo.value.availableRoles = userRoleInfo.value.availableRoles.filter(role => role.type !== roleType)
         userRoleInfo.value.lastUpdated = Date.now()
       }
 
@@ -292,6 +290,7 @@ export const usePermissionStore = defineStore(
      */
     const checkPermission = async (context: PermissionContext): Promise<PermissionCheckResult> => {
       // 生成缓存键
+      // eslint-disable-next-line ts/no-use-before-define
       const cacheKey = generatePermissionCacheKey(context)
 
       // 检查缓存
@@ -312,11 +311,7 @@ export const usePermissionStore = defineStore(
     /**
      * 检查是否有指定权限
      */
-    const hasPermission = async (
-      action: string,
-      resourceType: string,
-      resourceId: string,
-    ): Promise<boolean> => {
+    const hasPermission = async (action: string, resourceType: string, resourceId: string): Promise<boolean> => {
       if (!userRoleInfo.value) {
         return false
       }
@@ -334,10 +329,7 @@ export const usePermissionStore = defineStore(
     /**
      * 检查内容访问权限
      */
-    const checkContentAccess = async (
-      contentId: string,
-      context?: any,
-    ): Promise<AccessControlAction> => {
+    const checkContentAccess = async (contentId: string, context?: any): Promise<AccessControlAction> => {
       if (!currentRole.value) {
         return AccessControlAction.LOGIN_GUIDANCE
       }
@@ -348,12 +340,10 @@ export const usePermissionStore = defineStore(
     /**
      * 批量检查内容访问权限
      */
-    const batchCheckContentAccess = async (
-      contentIds: string[],
-    ): Promise<Record<string, AccessControlAction>> => {
+    const batchCheckContentAccess = async (contentIds: string[]): Promise<Record<string, AccessControlAction>> => {
       if (!currentRole.value) {
         const result: Record<string, AccessControlAction> = {}
-        contentIds.forEach((id) => {
+        contentIds.forEach(id => {
           result[id] = AccessControlAction.LOGIN_GUIDANCE
         })
         return result
@@ -417,8 +407,7 @@ export const usePermissionStore = defineStore(
           // 清除缓存以确保使用最新权限
           clearPermissionCache()
         }
-      }
-      catch (error) {
+      } catch (error) {
         console.error('同步用户角色信息失败:', error)
       }
     }
@@ -449,7 +438,7 @@ export const usePermissionStore = defineStore(
           console.log(`角色变化: ${oldRole} -> ${newRole}`)
           clearPermissionCache()
         }
-      },
+      }
     )
 
     // ==================== 返回Store接口 ====================
@@ -501,19 +490,25 @@ export const usePermissionStore = defineStore(
     }
   },
   {
-    persist: {
-      key: 'permission-store',
-      storage: {
-        getItem: (key: string) => uni.getStorageSync(key),
-        setItem: (key: string, value: string) => uni.setStorageSync(key, value),
-        removeItem: (key: string) => uni.removeStorageSync(key),
-      },
-      paths: [
-        'currentUserId',
-        'userRoleInfo',
-        'switchHistory',
-        'lastUpdated',
-      ],
-    },
-  },
+    persist: ((): any => {
+      const storage = {
+        getItem: (key: string): string | null => {
+          const v = uni.getStorageSync(key)
+          if (v === undefined || v === null) return null
+          return typeof v === 'string' ? v : JSON.stringify(v)
+        },
+        setItem: (key: string, value: string): void => {
+          uni.setStorageSync(key, value)
+        },
+        removeItem: (key: string): void => {
+          uni.removeStorageSync(key)
+        },
+      }
+      return {
+        key: 'permission-store',
+        storage,
+        paths: ['currentUserId', 'userRoleInfo', 'switchHistory', 'lastUpdated'],
+      }
+    })(),
+  }
 )

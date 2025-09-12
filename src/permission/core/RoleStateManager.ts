@@ -6,15 +6,8 @@
  */
 
 import type { IRoleManager } from '../interfaces'
-import type {
-  Role,
-  RoleSwitchOptions,
-  RoleSwitchRecord,
-  UserRoleInfo,
-} from '../types'
-import {
-  UserRole,
-} from '../types'
+import type { Role, RoleSwitchOptions, RoleSwitchRecord, UserRoleInfo } from '../types'
+import { UserRole } from '../types'
 
 // ==================== 角色状态接口 ====================
 
@@ -340,8 +333,7 @@ export class RoleStateManager implements IRoleManager {
       }
 
       return true
-    }
-    catch (error) {
+    } catch (error) {
       console.error('角色切换失败:', error)
 
       // 执行失败回调
@@ -389,8 +381,7 @@ export class RoleStateManager implements IRoleManager {
             stateManager: this,
           })
         }
-      }
-      else {
+      } else {
         // 添加到可用角色列表
         const existingRole = roleInfo.availableRoles.find(r => r.type === role.type)
         if (!existingRole) {
@@ -400,8 +391,7 @@ export class RoleStateManager implements IRoleManager {
       }
 
       return true
-    }
-    catch (error) {
+    } catch (error) {
       console.error('添加用户角色失败:', error)
       return false
     }
@@ -427,8 +417,7 @@ export class RoleStateManager implements IRoleManager {
       roleInfo.lastUpdated = Date.now()
 
       return true
-    }
-    catch (error) {
+    } catch (error) {
       console.error('移除用户角色失败:', error)
       return false
     }

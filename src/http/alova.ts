@@ -21,14 +21,13 @@ const { onAuthRequired, onResponseRefreshToken } = createServerTokenAuthenticati
   typeof uniappRequestAdapter
 >({
   refreshTokenOnError: {
-    isExpired: (error) => {
+    isExpired: error => {
       return error.response?.status === ResultEnum.Unauthorized
     },
     handler: async () => {
       try {
         // await authLogin();
-      }
-      catch (error) {
+      } catch (error) {
         // 切换到登录页
         await uni.reLaunch({ url: LOGIN_PAGE })
         throw error
@@ -46,7 +45,7 @@ const alovaInstance = createAlova({
   timeout: 5000,
   statesHook: VueHook,
 
-  beforeRequest: onAuthRequired((method) => {
+  beforeRequest: onAuthRequired(method => {
     // 设置默认 Content-Type
     method.config.headers = {
       ContentType: ContentTypeEnum.JSON,
@@ -76,11 +75,7 @@ const alovaInstance = createAlova({
   responded: onResponseRefreshToken((response, method) => {
     const { config } = method
     const { requestType } = config
-    const {
-      statusCode,
-      data: rawData,
-      errMsg,
-    } = response as UniNamespace.RequestSuccessCallbackResult
+    const { statusCode, data: rawData, errMsg } = response as UniNamespace.RequestSuccessCallbackResult
 
     // 处理特殊请求类型（上传/下载）
     if (requestType === 'upload' || requestType === 'download') {

@@ -29,7 +29,12 @@ export const uploadFileUrl = {
  * @param formData 额外表单数据
  * @param options 上传选项
  */
-export function useFileUpload<T = string>(url: string, filePath: string, formData: Record<string, any> = {}, options: Omit<UploadOptions, 'sourceType' | 'sizeType' | 'count'> = {}) {
+export function useFileUpload<T = string>(
+  url: string,
+  filePath: string,
+  formData: Record<string, any> = {},
+  options: Omit<UploadOptions, 'sourceType' | 'sizeType' | 'count'> = {}
+) {
   return useUpload<T>(
     url,
     formData,
@@ -38,7 +43,7 @@ export function useFileUpload<T = string>(url: string, filePath: string, formDat
       sourceType: ['album'],
       sizeType: ['original'],
     },
-    filePath,
+    filePath
   )
 }
 
@@ -69,9 +74,13 @@ export interface UploadOptions {
  * @param options 上传选项
  * @returns 上传状态和控制对象
  */
-export function useUpload<T = string>(url: string, formData: Record<string, any> = {}, options: UploadOptions = {},
+export function useUpload<T = string>(
+  url: string,
+  formData: Record<string, any> = {},
+  options: UploadOptions = {},
   /** 直接传入文件路径，跳过选择器 */
-  directFilePath?: string) {
+  directFilePath?: string
+) {
   /** 上传中状态 */
   const loading = ref(false)
   /** 上传错误状态 */
@@ -150,11 +159,10 @@ export function useUpload<T = string>(url: string, formData: Record<string, any>
       count,
       mediaType: ['image'], // 仅支持图片类型
       sourceType,
-      success: (res) => {
+      success: res => {
         const file = res.tempFiles[0]
         // 检查文件大小是否符合限制
-        if (!checkFileSize(file.size))
-          return
+        if (!checkFileSize(file.size)) return
 
         // 开始上传
         loading.value = true
@@ -173,7 +181,7 @@ export function useUpload<T = string>(url: string, formData: Record<string, any>
           onComplete,
         })
       },
-      fail: (err) => {
+      fail: err => {
         console.error('选择媒体文件失败:', err)
         error.value = true
         onError?.(err)
@@ -187,7 +195,7 @@ export function useUpload<T = string>(url: string, formData: Record<string, any>
       count,
       sizeType,
       sourceType,
-      success: (res) => {
+      success: res => {
         console.log('选择图片成功:', res)
 
         // 开始上传
@@ -207,7 +215,7 @@ export function useUpload<T = string>(url: string, formData: Record<string, any>
           onComplete,
         })
       },
-      fail: (err) => {
+      fail: err => {
         console.error('选择图片失败:', err)
         error.value = true
         onError?.(err)
@@ -280,7 +288,7 @@ function uploadFile<T>({
         // #endif
       },
       // 确保文件名称合法
-      success: (uploadFileRes) => {
+      success: uploadFileRes => {
         console.log('上传文件成功:', uploadFileRes)
         try {
           // 解析响应数据
@@ -288,15 +296,14 @@ function uploadFile<T>({
           // 上传成功
           data.value = _data as T
           onSuccess?.(_data)
-        }
-        catch (err) {
+        } catch (err) {
           // 响应解析错误
           console.error('解析上传响应失败:', err)
           error.value = true
           onError?.(new Error('上传响应解析失败'))
         }
       },
-      fail: (err) => {
+      fail: err => {
         // 上传请求失败
         console.error('上传文件失败:', err)
         error.value = true
@@ -310,12 +317,11 @@ function uploadFile<T>({
     })
 
     // 监听上传进度
-    uploadTask.onProgressUpdate((res) => {
+    uploadTask.onProgressUpdate(res => {
       progress.value = res.progress
       onProgress?.(res.progress)
     })
-  }
-  catch (err) {
+  } catch (err) {
     // 创建上传任务失败
     console.error('创建上传任务失败:', err)
     error.value = true

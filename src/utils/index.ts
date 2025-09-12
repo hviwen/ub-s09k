@@ -57,10 +57,10 @@ export function parseUrlToObj(url: string) {
     }
   }
   const query: Record<string, string> = {}
-  queryStr.split('&').forEach((item) => {
+  queryStr.split('&').forEach(item => {
     const [key, value] = item.split('=')
     // console.log(key, value)
-    query[key] = ensureDecodeURIComponent(value) // 这里需要统一 decodeURIComponent 一下，可以兼容h5和微信y
+    query[key] = ensureDecodeURIComponent(value) // 这里需要统一 decodeURIComponent 一下，可以兼容h5和微信小程序
   })
   return { path, query }
 }
@@ -80,7 +80,7 @@ export function getAllPages(key = 'excludeLoginPath') {
 
   // 这里处理分包
   const subPages: any[] = []
-  subPackages.forEach((subPageObj) => {
+  subPackages.forEach(subPageObj => {
     // console.log(subPageObj)
     const { root } = subPageObj
 
@@ -94,7 +94,7 @@ export function getAllPages(key = 'excludeLoginPath') {
       })
   })
   const result = [...mainPages, ...subPages]
-  // console.log(`getAllPages by ${key} result: `, result)
+  console.log(`getAllPages by ${key} result: `, result)
   return result
 }
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onHide, onLaunch, onShow } from '@dcloudio/uni-app'
 import { navigateToInterceptor } from '@/router/interceptor'
+import { HOME_PAGE } from '@/utils/index'
 import 'abortcontroller-polyfill/dist/abortcontroller-polyfill-only'
 
 onLaunch((options) => {
@@ -12,9 +13,8 @@ onShow((options) => {
   // https://github.com/unibest-tech/unibest/issues/192
   if (options?.path) {
     navigateToInterceptor.invoke({ url: `/${options.path}`, query: options.query })
-  }
-  else {
-    navigateToInterceptor.invoke({ url: '/' })
+  } else {
+    navigateToInterceptor.invoke({ url: HOME_PAGE })
   }
 })
 onHide(() => {

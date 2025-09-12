@@ -175,13 +175,11 @@ async function checkPermission(): Promise<void> {
     if (!permissionResult) {
       emit('permissionDenied', getPermissionDeniedReason(action))
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.error('权限检查失败:', error)
     hasPermission.value = false
     emit('permissionDenied', '权限检查异常')
-  }
-  finally {
+  } finally {
     isLoading.value = false
   }
 }

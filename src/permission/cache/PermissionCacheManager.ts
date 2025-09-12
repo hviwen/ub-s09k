@@ -129,8 +129,7 @@ export class PermissionCacheManager implements ICacheService {
         this.updateHitRate()
         return persistentValue
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.warn('获取持久化缓存失败:', error)
     }
 
@@ -154,8 +153,7 @@ export class PermissionCacheManager implements ICacheService {
     // 设置持久化缓存
     try {
       await this.setPersistentCache(fullKey, value, persistentTtl)
-    }
-    catch (error) {
+    } catch (error) {
       console.warn('设置持久化缓存失败:', error)
     }
 
@@ -174,8 +172,7 @@ export class PermissionCacheManager implements ICacheService {
     // 删除持久化缓存
     try {
       await this.deletePersistentCache(fullKey)
-    }
-    catch (error) {
+    } catch (error) {
       console.warn('删除持久化缓存失败:', error)
     }
 
@@ -197,8 +194,7 @@ export class PermissionCacheManager implements ICacheService {
           await this.deletePersistentCache(key)
         }
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.warn('清空持久化缓存失败:', error)
     }
 
@@ -240,7 +236,7 @@ export class PermissionCacheManager implements ICacheService {
     action: string,
     resourceType: string,
     resourceId: string,
-    result: PermissionCheckResult,
+    result: PermissionCheckResult
   ): Promise<void> {
     const key = `permission_${userId}_${role}_${action}_${resourceType}_${resourceId}`
     await this.set(key, result, this.config.memoryTtl) // 权限检查结果使用较短的TTL
@@ -254,7 +250,7 @@ export class PermissionCacheManager implements ICacheService {
     role: UserRole,
     action: string,
     resourceType: string,
-    resourceId: string,
+    resourceId: string
   ): Promise<PermissionCheckResult | null> {
     const key = `permission_${userId}_${role}_${action}_${resourceType}_${resourceId}`
     return await this.get<PermissionCheckResult>(key)
@@ -295,11 +291,9 @@ export class PermissionCacheManager implements ICacheService {
             // 这里可以调用API预加载权限数据
             // 实际实现中需要注入权限服务
             console.debug(`预加载用户权限: ${userId}, 角色: ${role}`)
-          }
-          catch (error) {
+          } catch (error) {
             console.warn('预加载权限失败:', error)
-          }
-          finally {
+          } finally {
             this.preloadQueue.delete(preloadKey)
           }
         }, this.config.preloadDelay)
@@ -425,14 +419,12 @@ export class PermissionCacheManager implements ICacheService {
         const entry: CacheEntry<T> = JSON.parse(value)
         if (!this.isExpired(entry)) {
           return entry.value
-        }
-        else {
+        } else {
           // 删除过期的持久化缓存
           uni.removeStorageSync(key)
         }
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.warn('读取持久化缓存失败:', error)
     }
     return null
@@ -452,8 +444,7 @@ export class PermissionCacheManager implements ICacheService {
         lastAccessAt: now,
       }
       uni.setStorageSync(key, JSON.stringify(entry))
-    }
-    catch (error) {
+    } catch (error) {
       console.warn('设置持久化缓存失败:', error)
     }
   }
@@ -464,8 +455,7 @@ export class PermissionCacheManager implements ICacheService {
   private async deletePersistentCache(key: string): Promise<void> {
     try {
       uni.removeStorageSync(key)
-    }
-    catch (error) {
+    } catch (error) {
       console.warn('删除持久化缓存失败:', error)
     }
   }
@@ -477,8 +467,7 @@ export class PermissionCacheManager implements ICacheService {
     try {
       const info = uni.getStorageInfoSync()
       return info.keys || []
-    }
-    catch (error) {
+    } catch (error) {
       console.warn('获取持久化缓存键失败:', error)
       return []
     }
@@ -523,9 +512,12 @@ export class PermissionCacheManager implements ICacheService {
    */
   private startCleanupTimer(): void {
     // 每5分钟清理一次过期缓存
-    this.cleanupTimer = setInterval(() => {
-      this.cleanup()
-    }, 5 * 60 * 1000) as any
+    this.cleanupTimer = setInterval(
+      () => {
+        this.cleanup()
+      },
+      5 * 60 * 1000
+    ) as any
   }
 }
 

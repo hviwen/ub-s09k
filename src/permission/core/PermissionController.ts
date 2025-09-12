@@ -6,17 +6,9 @@
  */
 
 import type { IContentAccessController, IPermissionChecker } from '../interfaces'
-import {
-  AccessControlAction,
-  ContentAccessConfig,
-  Permission,
-  PermissionAction,
-  PermissionCheckResult,
-  PermissionContext,
-  ResourceType,
-  UserRole,
-} from '../types'
+import type { ContentAccessConfig, Permission, PermissionCheckResult, PermissionContext } from '../types'
 import { PermissionStrategyFactory } from '../strategies'
+import { AccessControlAction, PermissionAction, ResourceType, UserRole } from '../types'
 
 // ==================== 权限规则定义 ====================
 
@@ -54,7 +46,7 @@ export class PermissionController implements IPermissionChecker, IContentAccessC
   private cacheTimeout: number
   private debugMode: boolean
 
-  constructor(options: { cacheTimeout?: number, debugMode?: boolean } = {}) {
+  constructor(options: { cacheTimeout?: number; debugMode?: boolean } = {}) {
     this.permissionRules = new Map()
     this.contentAccessRules = new Map()
     this.permissionCache = new Map()
@@ -164,8 +156,7 @@ export class PermissionController implements IPermissionChecker, IContentAccessC
       }
 
       return result
-    }
-    catch (error) {
+    } catch (error) {
       console.error('权限检查失败:', error)
       return {
         hasPermission: false,
@@ -222,7 +213,7 @@ export class PermissionController implements IPermissionChecker, IContentAccessC
     role: UserRole,
     resourceType: ResourceType,
     resourceId: string,
-    action: PermissionAction,
+    action: PermissionAction
   ): Promise<PermissionCheckResult> {
     // 查找匹配的权限规则
     const matchingRules = this.findMatchingRules(resourceType, resourceId)
@@ -241,7 +232,11 @@ export class PermissionController implements IPermissionChecker, IContentAccessC
       // 检查条件（如果有）
       if (rule.conditions) {
         const context: PermissionContext = {
-          userRole: { userId: 'current', currentRole: { id: role, type: role, name: role, permissions: [], status: 'active' as any }, availableRoles: [] },
+          userRole: {
+            userId: 'current',
+            currentRole: { id: role, type: role, name: role, permissions: [], status: 'active' as any },
+            availableRoles: [],
+          },
           resource: { type: resourceType, id: resourceId },
           action,
         }
@@ -290,9 +285,7 @@ export class PermissionController implements IPermissionChecker, IContentAccessC
    */
   private matchPattern(pattern: string, value: string): boolean {
     // 简单的通配符匹配实现
-    const regexPattern = pattern
-      .replace(/\*/g, '.*')
-      .replace(/\?/g, '.')
+    const regexPattern = pattern.replace(/\*/g, '.*').replace(/\?/g, '.')
 
     const regex = new RegExp(`^${regexPattern}$`)
     return regex.test(value)
@@ -305,7 +298,7 @@ export class PermissionController implements IPermissionChecker, IContentAccessC
     role: UserRole,
     action: PermissionAction,
     resourceType: ResourceType,
-    resourceId: string,
+    resourceId: string
   ): Promise<boolean> {
     const context: PermissionContext = {
       userRole: {
@@ -341,11 +334,7 @@ export class PermissionController implements IPermissionChecker, IContentAccessC
   /**
    * 检查内容访问权限
    */
-  async checkContentAccess(
-    contentId: string,
-    role: UserRole,
-    context?: any,
-  ): Promise<AccessControlAction> {
+  async checkContentAccess(contentId: string, role: UserRole, context?: any): Promise<AccessControlAction> {
     const config = this.contentAccessRules.get(contentId)
 
     if (!config) {
@@ -382,16 +371,13 @@ export class PermissionController implements IPermissionChecker, IContentAccessC
   /**
    * 批量检查内容访问权限
    */
-  async batchCheckContentAccess(
-    contentIds: string[],
-    role: UserRole,
-  ): Promise<Record<string, AccessControlAction>> {
+  async batchCheckContentAccess(contentIds: string[], role: UserRole): Promise<Record<string, AccessControlAction>> {
     const results: Record<string, AccessControlAction> = {}
 
     await Promise.all(
-      contentIds.map(async (contentId) => {
+      contentIds.map(async contentId => {
         results[contentId] = await this.checkContentAccess(contentId, role)
-      }),
+      })
     )
 
     return results

@@ -6,15 +6,8 @@
  */
 
 import type { IPermissionChecker } from '../interfaces'
-import {
-  AccessControlAction,
-  Permission,
-  PermissionAction,
-  PermissionCheckResult,
-  PermissionContext,
-  ResourceType,
-  UserRole,
-} from '../types'
+import type { Permission, PermissionCheckResult, PermissionContext } from '../types'
+import { AccessControlAction, PermissionAction, ResourceType, UserRole } from '../types'
 
 // ==================== 抽象策略基类 ====================
 
@@ -47,8 +40,7 @@ export abstract class BasePermissionStrategy implements IPermissionChecker {
 
       // 3. 后置检查
       return await this.postCheck(context, permissionResult)
-    }
-    catch (error) {
+    } catch (error) {
       console.error(`权限检查失败 [${this.role}]:`, error)
       return {
         hasPermission: false,
@@ -76,10 +68,7 @@ export abstract class BasePermissionStrategy implements IPermissionChecker {
   /**
    * 后置检查（可被子类重写）
    */
-  protected async postCheck(
-    context: PermissionContext,
-    result: PermissionCheckResult,
-  ): Promise<PermissionCheckResult> {
+  protected async postCheck(context: PermissionContext, result: PermissionCheckResult): Promise<PermissionCheckResult> {
     return result
   }
 
@@ -90,7 +79,7 @@ export abstract class BasePermissionStrategy implements IPermissionChecker {
     role: UserRole,
     action: PermissionAction,
     resourceType: ResourceType,
-    resourceId: string,
+    resourceId: string
   ): Promise<boolean> {
     const context: PermissionContext = {
       userRole: {
@@ -129,7 +118,7 @@ export abstract class BasePermissionStrategy implements IPermissionChecker {
     action: AccessControlAction,
     message?: string,
     redirectUrl?: string,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, any>
   ): PermissionCheckResult {
     return {
       hasPermission,
@@ -156,20 +145,11 @@ export class GuestPermissionStrategy extends BasePermissionStrategy {
 
     // 游客只能查看公开内容
     if (action === PermissionAction.VIEW && resource?.type === ResourceType.CONTENT) {
-      return this.createResult(
-        true,
-        AccessControlAction.READ_ONLY,
-        '游客只能查看内容，无法进行其他操作',
-      )
+      return this.createResult(true, AccessControlAction.READ_ONLY, '游客只能查看内容，无法进行其他操作')
     }
 
     // 其他操作需要登录
-    return this.createResult(
-      false,
-      AccessControlAction.LOGIN_GUIDANCE,
-      '请先登录以获取更多权限',
-      '/pages/login/login',
-    )
+    return this.createResult(false, AccessControlAction.LOGIN_GUIDANCE, '请先登录以获取更多权限', '/pages/login/login')
   }
 
   async getRolePermissions(): Promise<Permission[]> {
@@ -209,7 +189,7 @@ export class RegularUserPermissionStrategy extends BasePermissionStrategy {
         return this.createResult(
           true,
           AccessControlAction.UNRESTRICTED_ACCESS,
-          '普通用户可以查看、分享、收藏和评论内容',
+          '普通用户可以查看、分享、收藏和评论内容'
         )
       }
     }
@@ -219,7 +199,7 @@ export class RegularUserPermissionStrategy extends BasePermissionStrategy {
       false,
       AccessControlAction.ROLE_SWITCH_GUIDANCE,
       '该操作需要更高权限，请切换到相应角色',
-      '/pages/role/switch',
+      '/pages/role/switch'
     )
   }
 
@@ -266,11 +246,7 @@ export class ChannelUserPermissionStrategy extends BasePermissionStrategy {
       ]
 
       if (allowedActions.includes(action!)) {
-        return this.createResult(
-          true,
-          AccessControlAction.UNRESTRICTED_ACCESS,
-          '渠道用户拥有内容的完整操作权限',
-        )
+        return this.createResult(true, AccessControlAction.UNRESTRICTED_ACCESS, '渠道用户拥有内容的完整操作权限')
       }
     }
 
@@ -280,14 +256,11 @@ export class ChannelUserPermissionStrategy extends BasePermissionStrategy {
         false,
         AccessControlAction.ROLE_SWITCH_GUIDANCE,
         '管理操作需要机构用户或管理员权限',
-        '/pages/role/switch',
+        '/pages/role/switch'
       )
     }
 
-    return this.createResult(
-      true,
-      AccessControlAction.UNRESTRICTED_ACCESS,
-    )
+    return this.createResult(true, AccessControlAction.UNRESTRICTED_ACCESS)
   }
 
   async getRolePermissions(): Promise<Permission[]> {
@@ -323,11 +296,7 @@ export class InstitutionalUserPermissionStrategy extends BasePermissionStrategy 
 
     // 机构用户拥有所有内容权限
     if (resource?.type === ResourceType.CONTENT) {
-      return this.createResult(
-        true,
-        AccessControlAction.UNRESTRICTED_ACCESS,
-        '机构用户拥有所有内容操作权限',
-      )
+      return this.createResult(true, AccessControlAction.UNRESTRICTED_ACCESS, '机构用户拥有所有内容操作权限')
     }
 
     // 系统管理权限需要管理员角色
@@ -336,14 +305,11 @@ export class InstitutionalUserPermissionStrategy extends BasePermissionStrategy 
         false,
         AccessControlAction.ROLE_SWITCH_GUIDANCE,
         '系统管理需要管理员权限',
-        '/pages/role/switch',
+        '/pages/role/switch'
       )
     }
 
-    return this.createResult(
-      true,
-      AccessControlAction.UNRESTRICTED_ACCESS,
-    )
+    return this.createResult(true, AccessControlAction.UNRESTRICTED_ACCESS)
   }
 
   async getRolePermissions(): Promise<Permission[]> {
@@ -376,11 +342,7 @@ export class AdminPermissionStrategy extends BasePermissionStrategy {
 
   protected async doCheckPermission(context: PermissionContext): Promise<PermissionCheckResult> {
     // 管理员拥有所有权限
-    return this.createResult(
-      true,
-      AccessControlAction.UNRESTRICTED_ACCESS,
-      '管理员拥有系统所有权限',
-    )
+    return this.createResult(true, AccessControlAction.UNRESTRICTED_ACCESS, '管理员拥有系统所有权限')
   }
 
   async getRolePermissions(): Promise<Permission[]> {
@@ -452,7 +414,7 @@ export class PermissionStrategyFactory {
    * 预加载所有策略
    */
   static preloadStrategies(): void {
-    Object.values(UserRole).forEach((role) => {
+    Object.values(UserRole).forEach(role => {
       this.getStrategy(role)
     })
   }

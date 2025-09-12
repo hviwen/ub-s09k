@@ -379,12 +379,10 @@ async function handleConfirmSwitch(): Promise<void> {
         title: `已切换到${selectedRole.value.name}`,
         icon: 'success',
       })
-    }
-    else {
+    } else {
       throw new Error('角色切换失败')
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.error('角色切换失败:', error)
     emit('switchFailed', error as Error)
 
@@ -392,8 +390,7 @@ async function handleConfirmSwitch(): Promise<void> {
       title: '角色切换失败',
       icon: 'error',
     })
-  }
-  finally {
+  } finally {
     isSwitching.value = false
     selectedRole.value = null
     confirmPopup.value?.close()
@@ -412,8 +409,7 @@ async function loadSwitchHistory(): Promise<void> {
       )
       switchHistory.value = history
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.error('加载切换历史失败:', error)
   }
 }
@@ -442,14 +438,11 @@ function formatTime(timestamp: number): string {
 
   if (diff < 60000) { // 1分钟内
     return '刚刚'
-  }
-  else if (diff < 3600000) { // 1小时内
+  } else if (diff < 3600000) { // 1小时内
     return `${Math.floor(diff / 60000)}分钟前`
-  }
-  else if (diff < 86400000) { // 1天内
+  } else if (diff < 86400000) { // 1天内
     return `${Math.floor(diff / 3600000)}小时前`
-  }
-  else {
+  } else {
     return date.toLocaleDateString()
   }
 }

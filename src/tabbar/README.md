@@ -20,12 +20,12 @@
 
 ## tabbar 配置说明
 
-- 如果使用的是 `原生tabbar`，需要配置 `nativeTabbarList`，每个 `item` 需要配置 `path`、`text`、`iconPath`、`selectedIconPath` 等属性。
-- 如果使用的是  `自定义tabbar`，需要配置 `customTabbarList`，每个 `item` 需要配置 `path`、`text`、`icon` 、`iconType` 等属性（如果是 `image` 图片还需要配置2种图片）。
+- 如果使用的是 `原生tabbar`，需要配置 `nativeTabBarList`，每个 `item` 需要配置 `path`、`text`、`iconPath`、`selectedIconPath` 等属性。
+- 如果使用的是  `自定义tabbar`，需要配置 `customTabBarList`，每个 `item` 需要配置 `path`、`text`、`icon` 、`iconType` 等属性（如果是 `image` 图片还需要配置2种图片）。
 
 ## 文件说明
 
-`config.ts` 专门配置 `nativeTabbarList` 和 `customTabbarList` 的相关信息，请按照文件里面的注释配置相关项。
+`config.ts` 专门配置 `nativeTabBarList` 和 `customTabBarList` 的相关信息，请按照文件里面的注释配置相关项。
 
 使用 `原生tabbar` 时，不需要关心下面2个文件：
 - `store.ts` ，专门给 `自定义 tabbar` 提供状态管理，代码几乎不需要修改。

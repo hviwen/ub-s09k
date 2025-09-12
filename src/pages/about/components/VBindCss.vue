@@ -4,8 +4,7 @@ const testBindCssVariable = ref('red')
 function changeTestBindCssVariable() {
   if (testBindCssVariable.value === 'red') {
     testBindCssVariable.value = 'green'
-  }
-  else {
+  } else {
     testBindCssVariable.value = 'red'
   }
 }

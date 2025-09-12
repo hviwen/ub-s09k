@@ -40,8 +40,7 @@ export const useTokenStore = defineStore(
         // 单token模式
         const expireTime = now + val.expiresIn * 1000
         uni.setStorageSync('accessTokenExpireTime', expireTime)
-      }
-      else if (isDoubleTokenRes(val)) {
+      } else if (isDoubleTokenRes(val)) {
         // 双token模式
         const accessExpireTime = now + val.accessExpiresIn * 1000
         const refreshExpireTime = now + val.refreshExpiresIn * 1000
@@ -61,8 +60,7 @@ export const useTokenStore = defineStore(
       const now = Date.now()
       const expireTime = uni.getStorageSync('accessTokenExpireTime')
 
-      if (!expireTime)
-        return true
+      if (!expireTime) return true
       return now >= expireTime
     })
 
@@ -70,14 +68,12 @@ export const useTokenStore = defineStore(
      * 判断refreshToken是否过期
      */
     const isRefreshTokenExpired = computed(() => {
-      if (!isDoubleTokenMode)
-        return true
+      if (!isDoubleTokenMode) return true
 
       const now = Date.now()
       const refreshExpireTime = uni.getStorageSync('refreshTokenExpireTime')
 
-      if (!refreshExpireTime)
-        return true
+      if (!refreshExpireTime) return true
       return now >= refreshExpireTime
     })
 
@@ -96,12 +92,7 @@ export const useTokenStore = defineStore(
      * @param credentials 登录参数
      * @returns 登录结果
      */
-    const login = async (credentials: {
-      username: string
-      password: string
-      code: string
-      uuid: string
-    }) => {
+    const login = async (credentials: { username: string; password: string; code: string; uuid: string }) => {
       try {
         const res = await _login(credentials)
         console.log('普通登录-res: ', res)
@@ -111,8 +102,7 @@ export const useTokenStore = defineStore(
           icon: 'success',
         })
         return res
-      }
-      catch (error) {
+      } catch (error) {
         console.error('登录失败:', error)
         uni.showToast({
           title: '登录失败，请重试',
@@ -139,8 +129,7 @@ export const useTokenStore = defineStore(
           icon: 'success',
         })
         return res
-      }
-      catch (error) {
+      } catch (error) {
         console.error('微信登录失败:', error)
         uni.showToast({
           title: '微信登录失败，请重试',
@@ -157,11 +146,9 @@ export const useTokenStore = defineStore(
       try {
         // TODO 实现自己的退出登录逻辑
         await _logout()
-      }
-      catch (error) {
+      } catch (error) {
         console.error('退出登录失败:', error)
-      }
-      finally {
+      } finally {
         // 无论成功失败，都需要清除本地token信息
         // 清除存储的过期时间
         uni.removeStorageSync('accessTokenExpireTime')
@@ -195,8 +182,7 @@ export const useTokenStore = defineStore(
         console.log('刷新token-res: ', res)
         setTokenInfo(res.data)
         return res
-      }
-      catch (error) {
+      } catch (error) {
         console.error('刷新token失败:', error)
         throw error
       }
@@ -215,8 +201,7 @@ export const useTokenStore = defineStore(
 
       if (!isDoubleTokenMode) {
         return isSingleTokenRes(tokenInfo.value) ? tokenInfo.value.token : ''
-      }
-      else {
+      } else {
         return isDoubleTokenRes(tokenInfo.value) ? tokenInfo.value.accessToken : ''
       }
     })
@@ -230,8 +215,7 @@ export const useTokenStore = defineStore(
       }
       if (isDoubleTokenMode) {
         return isDoubleTokenRes(tokenInfo.value) && !!tokenInfo.value.accessToken
-      }
-      else {
+      } else {
         return isSingleTokenRes(tokenInfo.value) && !!tokenInfo.value.token
       }
     })
@@ -253,8 +237,7 @@ export const useTokenStore = defineStore(
         try {
           await refreshToken()
           return getValidToken.value
-        }
-        catch (error) {
+        } catch (error) {
           console.error('尝试刷新token失败:', error)
           return ''
         }
@@ -284,5 +267,5 @@ export const useTokenStore = defineStore(
   {
     // 添加持久化配置，确保刷新页面后token信息不丢失
     persist: true,
-  },
+  }
 )

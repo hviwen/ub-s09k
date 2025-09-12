@@ -30,7 +30,7 @@ export default function useUpload<T extends TfileType>(options: TOptions<T> = {}
   const error = ref<Error | null>(null)
   const data = ref<any>(null)
 
-  const handleFileChoose = ({ tempFilePath, size }: { tempFilePath: string, size: number }) => {
+  const handleFileChoose = ({ tempFilePath, size }: { tempFilePath: string; size: number }) => {
     if (size > maxSize) {
       uni.showToast({
         title: `文件大小不能超过 ${maxSize / 1024 / 1024}MB`,
@@ -54,13 +54,13 @@ export default function useUpload<T extends TfileType>(options: TOptions<T> = {}
     uploadFile({
       tempFilePath,
       formData,
-      onSuccess: (res) => {
+      onSuccess: res => {
         const { data: _data } = JSON.parse(res)
         data.value = _data
         // console.log('上传成功', res)
         success?.(_data)
       },
-      onError: (err) => {
+      onError: err => {
         error.value = err
         onError?.(err)
       },
@@ -112,8 +112,7 @@ export default function useUpload<T extends TfileType>(options: TOptions<T> = {}
       // #ifndef MP-WEIXIN
       uni.chooseImage(chooseFileOptions)
       // #endif
-    }
-    else {
+    } else {
       uni.chooseFile({
         ...chooseFileOptions,
         type: 'all',
@@ -142,16 +141,15 @@ async function uploadFile({
     filePath: tempFilePath,
     name: 'file',
     formData,
-    success: (uploadFileRes) => {
+    success: uploadFileRes => {
       try {
         const data = uploadFileRes.data
         onSuccess(data)
-      }
-      catch (err) {
+      } catch (err) {
         onError(err)
       }
     },
-    fail: (err) => {
+    fail: err => {
       console.error('Upload failed:', err)
       onError(err)
     },
