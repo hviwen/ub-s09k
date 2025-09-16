@@ -140,29 +140,44 @@ export class StartupOptimizer {
   }
 
   /**
-   * 阶段1：快速启动
+   * 阶段1：快速启动（优化版本）
    * @param userId 用户ID
    * @returns 基础用户角色信息
    */
   private async quickStart(userId: string | number): Promise<UserRoleInfo | null> {
     try {
-      // 首先尝试从缓存获取
-      const cachedUserRole = await this.cacheManager.getUserRoleFromCache(userId)
-      if (cachedUserRole && this.isUserRoleValid(cachedUserRole)) {
-        console.log('从缓存快速加载用户角色信息')
-        return cachedUserRole
+      // 优化1：并行检查多个缓存源
+      const cachePromises = [
+        this.cacheManager.getUserRoleFromCache(userId),
+        this.getLocalStorageUserRole(userId),
+        this.getSessionStorageUserRole(userId),
+      ]
+
+      const cachedResults = await Promise.allSettled(cachePromises)
+
+      // 寻找最新的有效缓存
+      for (const result of cachedResults) {
+        if (result.status === 'fulfilled' && result.value && this.isUserRoleValid(result.value)) {
+          console.log('从缓存快速加载用户角色信息')
+          // 异步更新其他缓存源
+          this.syncCacheInBackground(userId, result.value)
+          return result.value
+        }
       }
+
+      // 优化2：网络请求超时时间动态调整
+      const dynamicTimeout = this.calculateDynamicTimeout()
 
       // 缓存未命中，从API获取基础信息
       this.metrics.networkRequests++
       const userRoleInfo = await Promise.race([
         this.apiService.fetchUserRoles(userId),
-        this.createTimeoutPromise(this.config.quickStartTimeout),
+        this.createTimeoutPromise(dynamicTimeout),
       ])
 
       if (userRoleInfo) {
-        // 缓存用户角色信息
-        await this.cacheManager.cacheUserRole(userId, userRoleInfo)
+        // 优化3：并行缓存到多个存储
+        this.cacheUserRoleParallel(userId, userRoleInfo)
         console.log('快速启动完成，用户角色信息已加载')
         return userRoleInfo
       }
@@ -173,6 +188,104 @@ export class StartupOptimizer {
       // 降级策略：创建默认游客角色
       return this.createDefaultGuestRole(userId)
     }
+  }
+
+  /**
+   * 从本地存储获取用户角色
+   */
+  private async getLocalStorageUserRole(userId: string | number): Promise<UserRoleInfo | null> {
+    try {
+      const key = `user_role_${userId}`
+      const data = uni.getStorageSync(key)
+      return data ? JSON.parse(data) : null
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * 从会话存储获取用户角色
+   */
+  private async getSessionStorageUserRole(userId: string | number): Promise<UserRoleInfo | null> {
+    try {
+      const key = `session_user_role_${userId}`
+      const data = uni.getStorageSync(key)
+      return data ? JSON.parse(data) : null
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * 计算动态超时时间
+   */
+  private calculateDynamicTimeout(): number {
+    // 基于网络状况动态调整超时时间
+    const networkType = uni.getNetworkType?.()?.networkType || 'unknown'
+    const baseTimeout = this.config.quickStartTimeout
+
+    switch (networkType) {
+      case 'wifi':
+        return baseTimeout * 0.8 // WiFi环境缩短超时
+      case '4g':
+        return baseTimeout
+      case '3g':
+        return baseTimeout * 1.5
+      case '2g':
+        return baseTimeout * 2
+      default:
+        return baseTimeout
+    }
+  }
+
+  /**
+   * 并行缓存用户角色信息
+   */
+  private async cacheUserRoleParallel(userId: string | number, userRoleInfo: UserRoleInfo): Promise<void> {
+    const cachePromises = [
+      this.cacheManager.cacheUserRole(userId, userRoleInfo),
+      this.setLocalStorageUserRole(userId, userRoleInfo),
+      this.setSessionStorageUserRole(userId, userRoleInfo),
+    ]
+
+    // 不等待缓存完成，提升响应速度
+    Promise.allSettled(cachePromises).catch(error => {
+      console.warn('并行缓存失败:', error)
+    })
+  }
+
+  /**
+   * 设置本地存储用户角色
+   */
+  private async setLocalStorageUserRole(userId: string | number, userRoleInfo: UserRoleInfo): Promise<void> {
+    try {
+      const key = `user_role_${userId}`
+      uni.setStorageSync(key, JSON.stringify(userRoleInfo))
+    } catch (error) {
+      console.warn('设置本地存储失败:', error)
+    }
+  }
+
+  /**
+   * 设置会话存储用户角色
+   */
+  private async setSessionStorageUserRole(userId: string | number, userRoleInfo: UserRoleInfo): Promise<void> {
+    try {
+      const key = `session_user_role_${userId}`
+      uni.setStorageSync(key, JSON.stringify(userRoleInfo))
+    } catch (error) {
+      console.warn('设置会话存储失败:', error)
+    }
+  }
+
+  /**
+   * 后台同步缓存
+   */
+  private async syncCacheInBackground(userId: string | number, userRoleInfo: UserRoleInfo): Promise<void> {
+    // 异步同步其他缓存源
+    setTimeout(() => {
+      this.cacheUserRoleParallel(userId, userRoleInfo)
+    }, 100)
   }
 
   /**

@@ -263,22 +263,47 @@ export class PermissionController implements IPermissionChecker, IContentAccessC
   }
 
   /**
-   * 查找匹配的权限规则
+   * 查找匹配的权限规则（优化版本）
    */
   private findMatchingRules(resourceType: ResourceType, resourceId: string): PermissionRule[] {
+    // 优化1：使用规则索引加速查找
+    const cacheKey = `rules_${resourceType}_${resourceId}`
+    const cachedRules = this.ruleCache.get(cacheKey)
+
+    if (cachedRules) {
+      return cachedRules
+    }
+
     const matchingRules: PermissionRule[] = []
 
-    for (const [key, rules] of Array.from(this.permissionRules.entries())) {
-      const [ruleResourceType, pattern] = key.split(':')
+    // 优化2：直接查找精确匹配的规则
+    const exactKey = `${resourceType}:${resourceId}`
+    const exactRules = this.permissionRules.get(exactKey)
+    if (exactRules) {
+      matchingRules.push(...exactRules)
+    }
 
-      if (ruleResourceType === resourceType && this.matchPattern(pattern, resourceId)) {
-        matchingRules.push(...rules)
+    // 优化3：只在没有精确匹配时才进行模式匹配
+    if (matchingRules.length === 0) {
+      for (const [key, rules] of Array.from(this.permissionRules.entries())) {
+        const [ruleResourceType, pattern] = key.split(':')
+
+        if (ruleResourceType === resourceType && pattern.includes('*') && this.matchPattern(pattern, resourceId)) {
+          matchingRules.push(...rules)
+        }
       }
     }
 
     // 按优先级排序
-    return matchingRules.sort((a, b) => b.priority - a.priority)
+    const sortedRules = matchingRules.sort((a, b) => b.priority - a.priority)
+
+    // 缓存结果
+    this.ruleCache.set(cacheKey, sortedRules)
+
+    return sortedRules
   }
+
+  private ruleCache = new Map<string, PermissionRule[]>()
 
   /**
    * 模式匹配（支持通配符）

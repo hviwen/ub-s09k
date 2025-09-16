@@ -100,10 +100,15 @@ export class RoleSwitchService implements IRoleManager {
   }
 
   /**
-   * 切换用户角色（带队列和锁机制）
+   * 切换用户角色（优化版本 - 支持异步切换）
    */
   async switchRole(userId: string | number, options: RoleSwitchOptions): Promise<boolean> {
     const userKey = String(userId)
+
+    // 优化1：支持异步切换模式
+    if (options.async) {
+      return this.performAsyncRoleSwitch(userId, options)
+    }
 
     // 检查是否已有切换操作在进行
     if (this.switchLocks.has(userKey)) {
@@ -130,6 +135,57 @@ export class RoleSwitchService implements IRoleManager {
       this.switchQueue.delete(userKey)
       this.switchLocks.delete(userKey)
     }
+  }
+
+  /**
+   * 异步角色切换（立即返回，后台处理）
+   */
+  private async performAsyncRoleSwitch(userId: string | number, options: RoleSwitchOptions): Promise<boolean> {
+    const userKey = String(userId)
+
+    // 立即更新本地状态
+    const currentRoleInfo = await this.getCurrentUserRole(userId)
+    if (!currentRoleInfo) {
+      return false
+    }
+
+    const targetRole = currentRoleInfo.availableRoles.find(role => role.type === options.targetRole)
+    if (!targetRole) {
+      return false
+    }
+
+    // 立即触发切换开始事件
+    this.emitEvent({
+      type: RoleSwitchEventType.SWITCH_START,
+      userId,
+      fromRole: currentRoleInfo.currentRole.type,
+      toRole: options.targetRole,
+      timestamp: Date.now(),
+      data: { async: true, reason: options.reason },
+    })
+
+    // 后台执行完整的切换流程
+    setTimeout(async () => {
+      try {
+        await this.performRoleSwitch(userId, {
+          ...options,
+          skipLocalUpdate: true, // 跳过本地更新，因为已经更新过了
+        })
+      } catch (error) {
+        console.error('异步角色切换失败:', error)
+        // 回滚本地状态
+        this.emitEvent({
+          type: RoleSwitchEventType.SWITCH_FAILED,
+          userId,
+          fromRole: currentRoleInfo.currentRole.type,
+          toRole: options.targetRole,
+          timestamp: Date.now(),
+          error: error as Error,
+        })
+      }
+    }, 0)
+
+    return true
   }
 
   /**

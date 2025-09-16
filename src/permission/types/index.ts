@@ -255,6 +255,10 @@ export interface RoleSwitchOptions {
   reason?: string
   /** 是否保存切换历史 */
   saveHistory?: boolean
+  /** 是否异步切换（立即返回，后台处理） */
+  async?: boolean
+  /** 是否跳过本地更新（用于异步切换） */
+  skipLocalUpdate?: boolean
   /** 切换后的回调 */
   onSuccess?: (newRole: Role) => void
   /** 切换失败的回调 */
