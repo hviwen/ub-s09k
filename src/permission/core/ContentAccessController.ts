@@ -8,6 +8,12 @@
 import type { IContentAccessController } from '../interfaces'
 import type { ContentAccessConfig } from '../types'
 import { AccessControlAction, UserRole } from '../types'
+import {
+  createContentAccessConfig,
+  checkRoleContentAccess,
+  getDefaultContentAccessConfig,
+  CONTENT_TYPE_PERMISSION_MAP,
+} from '../config/DesignPermissionMatrix'
 
 // ==================== 内容访问规则定义 ====================
 
@@ -80,47 +86,44 @@ export class ContentAccessController implements IContentAccessController {
    * 初始化默认访问规则
    */
   private initializeDefaultRules(): void {
-    // 公开内容规则
-    this.registerContentAccessRule({
-      contentId: 'public_content',
-      contentType: 'article',
-      roleAccessRules: {
-        [UserRole.GUEST]: AccessControlAction.READ_ONLY,
-        [UserRole.REGULAR]: AccessControlAction.UNRESTRICTED_ACCESS,
-        [UserRole.CHANNEL]: AccessControlAction.UNRESTRICTED_ACCESS,
-        [UserRole.INSTITUTIONAL]: AccessControlAction.UNRESTRICTED_ACCESS,
-        [UserRole.ADMIN]: AccessControlAction.UNRESTRICTED_ACCESS,
-      },
-      defaultAction: AccessControlAction.READ_ONLY,
+    // 基于设计文档的权限矩阵初始化规则
+    Object.entries(CONTENT_TYPE_PERMISSION_MAP).forEach(([contentType, roleAccessRules]) => {
+      this.registerContentAccessRule({
+        contentId: contentType,
+        contentType,
+        roleAccessRules,
+        defaultAction: AccessControlAction.COMPLETE_RESTRICTION,
+      })
     })
 
-    // 会员内容规则
-    this.registerContentAccessRule({
-      contentId: 'premium_content',
-      contentType: 'premium',
-      roleAccessRules: {
-        [UserRole.GUEST]: AccessControlAction.LOGIN_GUIDANCE,
-        [UserRole.REGULAR]: AccessControlAction.ROLE_SWITCH_GUIDANCE,
-        [UserRole.CHANNEL]: AccessControlAction.UNRESTRICTED_ACCESS,
-        [UserRole.INSTITUTIONAL]: AccessControlAction.UNRESTRICTED_ACCESS,
-        [UserRole.ADMIN]: AccessControlAction.UNRESTRICTED_ACCESS,
-      },
-      defaultAction: AccessControlAction.COMPLETE_RESTRICTION,
+    // 注册默认内容访问配置
+    const defaultConfigs = [
+      'home',
+      'about',
+      'help',
+      'profile',
+      'investment',
+      'channel_dashboard',
+      'commission',
+      'institutional_dashboard',
+      'risk_control',
+    ]
+
+    defaultConfigs.forEach(contentId => {
+      const config = getDefaultContentAccessConfig(contentId)
+      if (config) {
+        this.registerContentAccessRule({
+          contentId: config.contentId,
+          contentType: config.contentType,
+          roleAccessRules: config.roleAccessRules,
+          defaultAction: config.defaultAction,
+        })
+      }
     })
 
-    // 机构专享内容规则
-    this.registerContentAccessRule({
-      contentId: 'institutional_content',
-      contentType: 'institutional',
-      roleAccessRules: {
-        [UserRole.GUEST]: AccessControlAction.LOGIN_GUIDANCE,
-        [UserRole.REGULAR]: AccessControlAction.ROLE_SWITCH_GUIDANCE,
-        [UserRole.CHANNEL]: AccessControlAction.ROLE_SWITCH_GUIDANCE,
-        [UserRole.INSTITUTIONAL]: AccessControlAction.UNRESTRICTED_ACCESS,
-        [UserRole.ADMIN]: AccessControlAction.UNRESTRICTED_ACCESS,
-      },
-      defaultAction: AccessControlAction.COMPLETE_RESTRICTION,
-    })
+    if (this.debugMode) {
+      console.log('已初始化基于设计文档的内容访问规则')
+    }
   }
 
   /**
@@ -183,6 +186,12 @@ export class ContentAccessController implements IContentAccessController {
    * 检查通用内容规则（基于内容类型）
    */
   private async checkGeneralContentRules(context: ContentAccessContext): Promise<ContentAccessResult | null> {
+    // 首先尝试使用设计文档的权限矩阵
+    const designMatrixResult = this.checkDesignMatrixRules(context)
+    if (designMatrixResult) {
+      return designMatrixResult
+    }
+
     // 根据内容ID模式匹配规则
     for (const [ruleId, rule] of this.accessRules) {
       if (this.matchContentPattern(ruleId, context.contentId)) {
@@ -194,6 +203,96 @@ export class ContentAccessController implements IContentAccessController {
     }
 
     return null
+  }
+
+  /**
+   * 使用设计文档权限矩阵检查权限
+   */
+  private checkDesignMatrixRules(context: ContentAccessContext): ContentAccessResult | null {
+    // 尝试从内容ID推断内容类型
+    const contentType = this.inferContentTypeFromId(context.contentId)
+
+    if (contentType && contentType in CONTENT_TYPE_PERMISSION_MAP) {
+      const action = checkRoleContentAccess(context.role, contentType as keyof typeof CONTENT_TYPE_PERMISSION_MAP)
+
+      return {
+        action,
+        message: this.getActionMessage(action, context.role, contentType),
+        metadata: {
+          source: 'design_matrix',
+          contentType,
+          appliedRule: 'role_visibility_range',
+        },
+      }
+    }
+
+    return null
+  }
+
+  /**
+   * 从内容ID推断内容类型
+   */
+  private inferContentTypeFromId(contentId: string): string | null {
+    // 内容ID到内容类型的映射规则
+    const idToTypeMap: Record<string, string> = {
+      home: 'public_content',
+      about: 'public_content',
+      help: 'help_document',
+      profile: 'user_profile',
+      investment: 'investment_record',
+      channel_dashboard: 'channel_data',
+      commission: 'commission_report',
+      institutional_dashboard: 'institutional_data',
+      risk_control: 'risk_management',
+    }
+
+    // 直接映射
+    if (idToTypeMap[contentId]) {
+      return idToTypeMap[contentId]
+    }
+
+    // 模式匹配
+    if (contentId.includes('channel')) return 'channel_data'
+    if (contentId.includes('institutional')) return 'institutional_data'
+    if (contentId.includes('user') || contentId.includes('profile')) return 'user_profile'
+    if (contentId.includes('public') || contentId.includes('announcement')) return 'public_content'
+
+    return null
+  }
+
+  /**
+   * 获取访问控制动作的消息（增强版本，支持内容类型）
+   */
+  private getActionMessage(action: AccessControlAction, role: UserRole, contentType?: string): string {
+    const roleNames = {
+      [UserRole.GUEST]: '游客',
+      [UserRole.REGULAR]: '普通客户',
+      [UserRole.CHANNEL]: '渠道经理',
+      [UserRole.INSTITUTIONAL]: '机构经理',
+      [UserRole.ADMIN]: '管理员',
+    }
+
+    const roleName = roleNames[role] || role
+    const content = contentType ? `${contentType}内容` : '此内容'
+
+    switch (action) {
+      case AccessControlAction.UNRESTRICTED_ACCESS:
+        return `${roleName}可以完全访问${content}`
+      case AccessControlAction.COMPLETE_RESTRICTION:
+        return `${roleName}无权访问${content}`
+      case AccessControlAction.READ_ONLY:
+        return `${roleName}只能查看${content}`
+      case AccessControlAction.LOGIN_GUIDANCE:
+        return '请先登录以访问此内容'
+      case AccessControlAction.ROLE_SWITCH_GUIDANCE:
+        return '请切换到相应角色以访问此内容'
+      case AccessControlAction.APPROVAL_PENDING:
+        return '您的访问申请正在审核中'
+      case AccessControlAction.ACCOUNT_EXCEPTION:
+        return '账户状态异常，请联系管理员'
+      default:
+        return '访问受限'
+    }
   }
 
   /**
@@ -265,30 +364,6 @@ export class ContentAccessController implements IContentAccessController {
     }
 
     return pattern === contentId
-  }
-
-  /**
-   * 获取动作消息
-   */
-  private getActionMessage(action: AccessControlAction, role: UserRole): string {
-    switch (action) {
-      case AccessControlAction.READ_ONLY:
-        return `${role} 用户只能查看此内容`
-      case AccessControlAction.COMPLETE_RESTRICTION:
-        return `${role} 用户无权访问此内容`
-      case AccessControlAction.UNRESTRICTED_ACCESS:
-        return `${role} 用户拥有完整访问权限`
-      case AccessControlAction.LOGIN_GUIDANCE:
-        return '请先登录以访问此内容'
-      case AccessControlAction.ROLE_SWITCH_GUIDANCE:
-        return '请切换到相应角色以访问此内容'
-      case AccessControlAction.APPROVAL_PENDING:
-        return '您的访问申请正在审核中'
-      case AccessControlAction.ACCOUNT_EXCEPTION:
-        return '账户状态异常，请联系管理员'
-      default:
-        return '访问受限'
-    }
   }
 
   /**

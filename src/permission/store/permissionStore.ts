@@ -20,6 +20,7 @@ import { computed, ref, watch } from 'vue'
 import { ContentAccessController } from '../core/ContentAccessController'
 import { PermissionController } from '../core/PermissionController'
 import { RoleSwitchService } from '../core/RoleSwitchService'
+import { getStartupOptimizer } from '../core/StartupOptimizer'
 import { AccessControlAction, UserRole } from '../types'
 
 // ==================== 状态接口定义 ====================
@@ -64,6 +65,11 @@ export const usePermissionStore = defineStore(
     const roleSwitchService = new RoleSwitchService()
     const permissionController = new PermissionController({ debugMode: import.meta.env.DEV })
     const contentAccessController = new ContentAccessController({ debugMode: import.meta.env.DEV })
+    const startupOptimizer = getStartupOptimizer({
+      enablePerformanceMonitoring: import.meta.env.DEV,
+      quickStartTimeout: 2000,
+      preloadPermissionCount: 10,
+    })
 
     // ==================== 计算属性 ====================
 
@@ -151,7 +157,7 @@ export const usePermissionStore = defineStore(
     // ==================== 初始化方法 ====================
 
     /**
-     * 初始化权限系统
+     * 初始化权限系统（优化版本）
      */
     const initializePermissionSystem = async (userId: string | number): Promise<void> => {
       try {
@@ -159,8 +165,15 @@ export const usePermissionStore = defineStore(
 
         currentUserId.value = userId
 
-        // 获取用户角色信息
-        const roleInfo = await roleSwitchService.getCurrentUserRole(userId)
+        // 使用启动优化器进行渐进式初始化
+        const startupOptimizer = getStartupOptimizer({
+          enablePerformanceMonitoring: import.meta.env.DEV,
+          quickStartTimeout: 2000,
+          preloadPermissionCount: 10,
+        })
+
+        const roleInfo = await startupOptimizer.initializePermissionSystem(userId)
+
         if (roleInfo) {
           userRoleInfo.value = roleInfo
         } else {
@@ -169,13 +182,16 @@ export const usePermissionStore = defineStore(
           await createDefaultGuestRole(userId)
         }
 
-        // 获取角色切换历史
-        switchHistory.value = await roleSwitchService.getRoleSwitchHistory(userId, 20)
-
         isInitialized.value = true
         lastUpdated.value = Date.now()
 
         console.log('权限系统初始化完成', { userId, roleInfo: userRoleInfo.value })
+
+        // 在开发环境下输出性能指标
+        if (import.meta.env.DEV) {
+          const metrics = startupOptimizer.getMetrics()
+          console.log('启动性能指标:', metrics)
+        }
       } catch (error) {
         console.error('权限系统初始化失败:', error)
         throw error

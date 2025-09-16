@@ -74,11 +74,7 @@ export interface IContentAccessController {
    * @param context 额外上下文
    * @returns 访问控制动作
    */
-  checkContentAccess: (
-    contentId: string,
-    role: UserRole,
-    context?: any
-  ) => Promise<AccessControlAction>
+  checkContentAccess: (contentId: string, role: UserRole, context?: any) => Promise<AccessControlAction>
 
   /**
    * 注册内容访问规则
@@ -92,10 +88,55 @@ export interface IContentAccessController {
    * @param role 用户角色
    * @returns 访问控制动作映射
    */
-  batchCheckContentAccess: (
-    contentIds: string[],
-    role: UserRole
-  ) => Promise<Record<string, AccessControlAction>>
+  batchCheckContentAccess: (contentIds: string[], role: UserRole) => Promise<Record<string, AccessControlAction>>
+}
+
+// ==================== 缓存服务接口 ====================
+
+/**
+ * 缓存服务接口
+ */
+export interface ICacheService {
+  /**
+   * 获取缓存值
+   * @param key 缓存键
+   * @returns 缓存值或null
+   */
+  get<T>(key: string): Promise<T | null>
+
+  /**
+   * 设置缓存值
+   * @param key 缓存键
+   * @param value 缓存值
+   * @param ttl 过期时间（毫秒）
+   * @returns 设置结果
+   */
+  set<T>(key: string, value: T, ttl?: number): Promise<boolean>
+
+  /**
+   * 删除缓存
+   * @param key 缓存键
+   * @returns 删除结果
+   */
+  delete(key: string): Promise<boolean>
+
+  /**
+   * 清空所有缓存
+   */
+  clear(): Promise<void>
+
+  /**
+   * 检查缓存是否存在
+   * @param key 缓存键
+   * @returns 是否存在
+   */
+  has(key: string): Promise<boolean>
+
+  /**
+   * 获取缓存统计信息
+   * @returns 统计信息
+   */
+  getStats(): any
 }
 
 // ==================== 角色管理器接口 ====================
@@ -279,7 +320,7 @@ export interface IPermissionApiService {
     userId: string | number,
     targetRole: UserRole,
     reason?: string
-  ) => Promise<{ success: boolean, message?: string }>
+  ) => Promise<{ success: boolean; message?: string }>
 
   /**
    * 验证权限
@@ -330,7 +371,7 @@ export interface IRoutePermissionGuard {
    * 批量注册页面权限规则
    * @param rules 权限规则映射
    */
-  batchRegisterPageRules: (rules: Record<string, { roles: UserRole[], redirect?: string }>) => void
+  batchRegisterPageRules: (rules: Record<string, { roles: UserRole[]; redirect?: string }>) => void
 }
 
 // ==================== 组件权限装饰器接口 ====================

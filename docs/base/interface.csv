@@ -1,0 +1,11 @@
+﻿名称,地址,使用场景,说明,返回
+获取系统UC配置,getUCSystemApiConfig,启动,,
+获取UnionId,getUnionId,,获取微信unionId 为H5授权准备,
+获取WeChatInfoId,getWechatInfo,,,
+查询用户上一次的认证记录,getStaffAuthRecord,,获取最近一次记录的身份信息,渠道经理、机构经理、普通客户、无 对应的约定枚举
+检查用户状态,checkLogin,,检查用户状态信息,当前的角色身份状态（审核中、已拒绝、审核通过）并刷新当前角色token
+用户身份切换,setIdExchange,切换身份,,
+根据当前身份（token）检查所有存在身份,getStaffCustomerType,,,
+登录（身份）,login,,,
+注册（身份）,register,,,
+查询内容类型是否可以分享（内容类别id、子id）,getShareConfig,,,

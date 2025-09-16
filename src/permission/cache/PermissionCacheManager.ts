@@ -6,7 +6,7 @@
  */
 
 import type { ICacheService } from '../interfaces'
-import type { Permission, PermissionCheckResult, Role, UserRole } from '../types'
+import type { Permission, PermissionCheckResult, Role, UserRole, UserRoleInfo } from '../types'
 
 // ==================== 缓存配置类型 ====================
 
@@ -142,7 +142,7 @@ export class PermissionCacheManager implements ICacheService {
   /**
    * 设置缓存值
    */
-  async set<T>(key: string, value: T, ttl?: number): Promise<void> {
+  async set<T>(key: string, value: T, ttl?: number): Promise<boolean> {
     const fullKey = this.getFullKey(key)
     const memoryTtl = ttl || this.config.memoryTtl
     const persistentTtl = ttl || this.config.persistentTtl
@@ -158,12 +158,13 @@ export class PermissionCacheManager implements ICacheService {
     }
 
     this.updateStats()
+    return true
   }
 
   /**
    * 删除缓存
    */
-  async delete(key: string): Promise<void> {
+  async delete(key: string): Promise<boolean> {
     const fullKey = this.getFullKey(key)
 
     // 删除内存缓存
@@ -177,6 +178,7 @@ export class PermissionCacheManager implements ICacheService {
     }
 
     this.updateStats()
+    return true
   }
 
   /**
@@ -214,9 +216,10 @@ export class PermissionCacheManager implements ICacheService {
   /**
    * 缓存用户角色信息
    */
-  async cacheUserRole(userId: string | number, role: Role): Promise<void> {
+  async cacheUserRole(userId: string | number, userRoleInfo: UserRoleInfo): Promise<boolean> {
     const key = `user_role_${userId}`
-    await this.set(key, role, this.config.persistentTtl)
+    await this.set(key, userRoleInfo, this.config.persistentTtl)
+    return true
   }
 
   /**
@@ -319,7 +322,7 @@ export class PermissionCacheManager implements ICacheService {
     const expiredKeys: string[] = []
 
     // 清理内存缓存
-    for (const [key, entry] of this.memoryCache.entries()) {
+    for (const [key, entry] of Array.from(this.memoryCache.entries())) {
       if (this.isExpired(entry)) {
         expiredKeys.push(key)
       }
@@ -397,7 +400,7 @@ export class PermissionCacheManager implements ICacheService {
     let lruKey: string | null = null
     let lruTime = Date.now()
 
-    for (const [key, entry] of this.memoryCache.entries()) {
+    for (const [key, entry] of Array.from(this.memoryCache.entries())) {
       if (entry.lastAccessAt < lruTime) {
         lruTime = entry.lastAccessAt
         lruKey = key
@@ -505,6 +508,27 @@ export class PermissionCacheManager implements ICacheService {
       memoryEntries: 0,
       persistentEntries: 0,
     }
+  }
+
+  /**
+   * 从缓存获取用户角色信息
+   * @param userId 用户ID
+   * @returns 用户角色信息或null
+   */
+  async getUserRoleFromCache(userId: string | number): Promise<UserRoleInfo | null> {
+    const key = `user_role_${userId}`
+    return await this.get<UserRoleInfo>(key)
+  }
+
+  /**
+   * 清除用户角色缓存
+   * @param userId 用户ID
+   * @returns 清除结果
+   */
+  async clearUserRoleCache(userId: string | number): Promise<boolean> {
+    const key = `user_role_${userId}`
+    await this.delete(key)
+    return true
   }
 
   /**

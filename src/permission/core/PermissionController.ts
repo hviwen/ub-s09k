@@ -268,7 +268,7 @@ export class PermissionController implements IPermissionChecker, IContentAccessC
   private findMatchingRules(resourceType: ResourceType, resourceId: string): PermissionRule[] {
     const matchingRules: PermissionRule[] = []
 
-    for (const [key, rules] of this.permissionRules) {
+    for (const [key, rules] of Array.from(this.permissionRules.entries())) {
       const [ruleResourceType, pattern] = key.split(':')
 
       if (ruleResourceType === resourceType && this.matchPattern(pattern, resourceId)) {
@@ -456,7 +456,7 @@ export class PermissionController implements IPermissionChecker, IContentAccessC
   private cleanupExpiredCache(): void {
     const now = Date.now()
 
-    for (const [key, item] of this.permissionCache) {
+    for (const [key, item] of Array.from(this.permissionCache.entries())) {
       if (now - item.timestamp > item.ttl) {
         this.permissionCache.delete(key)
       }
@@ -476,7 +476,7 @@ export class PermissionController implements IPermissionChecker, IContentAccessC
   clearCacheByPattern(pattern: string): void {
     const regex = new RegExp(pattern)
 
-    for (const key of this.permissionCache.keys()) {
+    for (const key of Array.from(this.permissionCache.keys())) {
       if (regex.test(key)) {
         this.permissionCache.delete(key)
       }
