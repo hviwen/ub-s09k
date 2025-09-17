@@ -1,4 +1,4 @@
-import { isMp } from '@uni-helper/uni-env'
+import { isApp, isH5, isMp } from '@uni-helper/uni-env'
 import { getRoutePermissionGuard } from '@/permission/router/RoutePermissionGuard'
 import { usePermissionStore } from '@/permission/store/permissionStore'
 import { AccessControlAction, UserRole } from '@/permission/types'
@@ -7,7 +7,10 @@ import { isPageTabBar, tabBarStore } from '@/tabbar/store'
 import { getAllPages, getLastPage, HOME_PAGE, parseUrlToObj } from '@/utils/index'
 import { EXCLUDE_LOGIN_PATH_LIST, isNeedLoginMode, LOGIN_PAGE, LOGIN_PAGE_ENABLE_IN_MP } from './config'
 
-export const LOG_ENABLE = false
+export const LOG_ENABLE = true
+
+// 平台信息日志
+console.log('路由拦截器平台信息:', { isMp, isH5, isApp, LOGIN_PAGE_ENABLE_IN_MP })
 
 export function judgeIsExcludePath(path: string) {
   console.log('judgeIsExcludePath:', path)
@@ -32,19 +35,42 @@ function extractPathForSwitch(url?: string): string | undefined {
   return path
 }
 
+function composeUrl(path: string, query: Record<string, string>): string {
+  const queryEntries = Object.entries(query).filter(([, value]) => value !== undefined && value !== null)
+  if (!queryEntries.length) {
+    return path
+  }
+  const queryString = queryEntries.map(([key, value]) => `${key}=${value}`).join('&')
+  return `${path}?${queryString}`
+}
+
 /**
  * Helper: 安全地调用 switchTab / navigateTo，避免传入 undefined
  */
 function safeNavigate(urlWithQuery?: string) {
+  if (!urlWithQuery) {
+    console.warn('safeNavigate: URL为空，导航到首页')
+    uni.navigateTo({ url: HOME_PAGE })
+    return
+  }
+
   const pathForSwitch = extractPathForSwitch(urlWithQuery)
+  LOG_ENABLE &&
+    console.log('safeNavigate:', {
+      urlWithQuery,
+      pathForSwitch,
+      isTabBar: pathForSwitch ? isPageTabBar(pathForSwitch) : false,
+    })
+
   if (pathForSwitch && isPageTabBar(pathForSwitch)) {
+    LOG_ENABLE && console.log('safeNavigate: 调用 switchTab，URL:', pathForSwitch)
     uni.switchTab({ url: pathForSwitch })
     return
   }
 
-  // 如果不能 switchTab，则使用带 query 的完整地址（若传入为 undefined，回退到 HOME_PAGE）
-  const final = urlWithQuery || HOME_PAGE
-  uni.navigateTo({ url: final })
+  // 如果不能 switchTab，则使用带 query 的完整地址
+  LOG_ENABLE && console.log('safeNavigate: 调用 navigateTo，URL:', urlWithQuery)
+  uni.navigateTo({ url: urlWithQuery })
 }
 
 /**
@@ -110,24 +136,112 @@ async function checkRoutePermission(path: string): Promise<{
   }
 }
 
+interface NavigationInvokeOptions {
+  url?: string
+  query?: Record<string, string>
+  // 允许透传 success、fail 等其他 uni 标准参数
+  [key: string]: any
+}
+
 export const navigateToInterceptor = {
   // 注意，这里的url是 '/' 开头的，如 '/pages/index/index'，跟 'pages.json' 里面的 path 不同
   // 增加对相对路径的处理，BY 网友 @ideal
   // 增强版：集成多角色权限管理系统
-  async invoke({ url, query }: { url: string; query?: Record<string, string> }) {
+  async invoke(options: NavigationInvokeOptions) {
+    const { url, query } = options
     if (url === undefined) {
       console.warn('路由拦截器: URL参数为undefined，阻止导航')
       return false
     }
 
-    return await handleRouteNavigation(url, query)
+    const result = await handleRouteNavigation(url, query)
+    if (!result.allowed) {
+      return false
+    }
+
+    options.url = result.normalizedUrl
+    return options
+  },
+}
+
+interface SwitchTabInvokeOptions {
+  url?: string
+  [key: string]: any
+}
+
+export const switchTabInterceptor = {
+  // switchTab 专用拦截器，处理 tabBar 页面的特殊逻辑
+  async invoke(options: SwitchTabInvokeOptions) {
+    const { url } = options
+    if (url === undefined) {
+      console.warn('switchTab拦截器: URL参数为undefined，阻止导航')
+      return false
+    }
+
+    LOG_ENABLE && console.log('switchTab拦截器被调用:', url)
+
+    // 对于 switchTab，我们需要特殊处理，因为它不支持 query 参数
+    const { path } = parseUrlToObj(url)
+    const normalizedPath = normalizeRoutePath(path)
+
+    // 检查是否是有效的 tabBar 页面
+    if (!isPageTabBar(normalizedPath)) {
+      console.warn(`switchTab拦截器: ${normalizedPath} 不是有效的 tabBar 页面`)
+      return false
+    }
+
+    // 处理 tabBar 索引
+    tabBarStore.setAutoCurIdx(normalizedPath)
+
+    // 将归一化后的路径写回，让后续平台实现拿到正确的 url
+    options.url = normalizedPath
+
+    // 小程序里面使用平台自带的登录，则不走下面的逻辑
+    if (isMp && !LOGIN_PAGE_ENABLE_IN_MP) {
+      console.log('小程序里面使用平台自带的登录，switchTab 直接通过')
+      return options
+    }
+
+    // 执行权限检查（不传递 query，因为 switchTab 不支持）
+    const result = await handleRouteNavigation(normalizedPath, {})
+    if (!result.allowed) {
+      return false
+    }
+
+    options.url = result.normalizedUrl
+    return options
+  },
+}
+
+const lightweightSwitchTabInterceptor = {
+  invoke(options: SwitchTabInvokeOptions) {
+    const { url } = options
+    if (url === undefined) {
+      console.warn('轻量版switchTab拦截器: URL参数为undefined，阻止导航')
+      return false
+    }
+
+    const { path } = parseUrlToObj(url)
+    const normalizedPath = normalizeRoutePath(path)
+
+    if (!isPageTabBar(normalizedPath)) {
+      console.warn(`轻量版switchTab拦截器: ${normalizedPath} 不是有效的 tabBar 页面`)
+      return false
+    }
+
+    tabBarStore.setAutoCurIdx(normalizedPath)
+    options.url = normalizedPath
+    return options
   },
 }
 
 /**
  * 处理路由导航的核心逻辑
  */
-async function handleRouteNavigation(url: string, query?: Record<string, string>): Promise<boolean> {
+async function handleRouteNavigation(
+  url: string,
+  query?: Record<string, string>
+): Promise<{ allowed: boolean; normalizedPath: string; mergedQuery: Record<string, string>; normalizedUrl: string }> {
   let { path, query: _query } = parseUrlToObj(url)
 
   LOG_ENABLE && console.log('\n\n路由拦截器:-------------------------------------')
@@ -146,18 +260,23 @@ async function handleRouteNavigation(url: string, query?: Record<string, string>
   console.log('isMp && !LOGIN_PAGE_ENABLE_IN_MP:', isMp && !LOGIN_PAGE_ENABLE_IN_MP)
   if (isMp && !LOGIN_PAGE_ENABLE_IN_MP) {
     console.log('小程序里面使用平台自带的登录，不走登录逻辑')
-    return true
+    const normalizedUrl = composeUrl(path, myQuery)
+    return { allowed: true, normalizedPath: path, mergedQuery: myQuery, normalizedUrl }
   }
 
   // 执行增强版权限检查
   const permissionResult = await checkRoutePermission(path)
   console.log('handleRouteNavigation permissionResult:', permissionResult)
   if (!permissionResult.allowed) {
-    return handlePermissionDenied(permissionResult, path, myQuery)
+    handlePermissionDenied(permissionResult, path, myQuery)
+    const normalizedUrl = composeUrl(path, myQuery)
+    return { allowed: false, normalizedPath: path, mergedQuery: myQuery, normalizedUrl }
   }
 
   // 执行传统登录检查（向后兼容）
-  return await checkLoginPermission(path, myQuery)
+  const loginAllowed = await checkLoginPermission(path, myQuery)
+  const normalizedUrl = composeUrl(path, myQuery)
+  return { allowed: loginAllowed, normalizedPath: path, mergedQuery: myQuery, normalizedUrl }
 }
 
 /**
@@ -319,10 +438,15 @@ export const routeInterceptor = {
     uni.addInterceptor('reLaunch', navigateToInterceptor)
     uni.addInterceptor('redirectTo', navigateToInterceptor)
 
+    // 使用专用的 switchTab 拦截器
     // 在小程序环境下，如果不使用H5登录页，则不拦截switchTab
     // 这样可以避免异步拦截器导致的参数传递问题
     if (!(isMp && !LOGIN_PAGE_ENABLE_IN_MP)) {
-      uni.addInterceptor('switchTab', navigateToInterceptor)
+      console.log('注册switchTab拦截器')
+      uni.addInterceptor('switchTab', switchTabInterceptor)
+    } else {
+      console.log('小程序环境且不使用H5登录页，注册轻量版switchTab拦截器')
+      uni.addInterceptor('switchTab', lightweightSwitchTabInterceptor)
     }
   },
 }

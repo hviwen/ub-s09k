@@ -1,4 +1,11 @@
-import type { IAuthLoginRes, ICaptcha, IDoubleTokenRes, IUpdateInfo, IUpdatePassword, IUserInfoRes } from './types/login'
+import type {
+  IAuthLoginRes,
+  ICaptcha,
+  IDoubleTokenRes,
+  IUpdateInfo,
+  IUpdatePassword,
+  IUserInfoRes,
+} from './types/login'
 import { http } from '@/http/http'
 
 /**
@@ -83,5 +90,5 @@ export function getWxCode() {
  * @returns Promise 包含登录结果
  */
 export function wxLogin(data: { code: string }) {
-  return http.post<IAuthLoginRes>('/auth/wxLogin', data)
+  return http.post<IAuthLoginRes>('/wechat-miniprogram-auth/login', data)
 }
